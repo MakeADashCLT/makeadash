@@ -11,3 +11,13 @@ Backend
 
 cd ../server
 npm install
+
+Start Frontend
+cd client
+npm run dev
+runs on: http://localhost:5173
+
+Start Express Backend
+cd server
+npm run dev
+runs on: http://localhost:3000
