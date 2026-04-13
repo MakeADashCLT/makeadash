@@ -1,25 +1,44 @@
 const express = require("express");
 const session = require("express-session");
 const passport = require("passport");
-require("../config/passport"); // Load Passport config
+const cors = require("cors");
+
+require("../config/passport");
 
 const authRoutes = require("../routes/auth");
 const userRoutes = require("../routes/users");
 
 const app = express();
 
-// Express session setup
-app.use(session({
-  secret: process.env.SESSION_SECRET || "default_secret",
-  resave: false,
-  saveUninitialized: false,
-}));
+// CORS
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
 
-// Initialize Passport
+app.use(express.json());
+
+// session
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: "lax",
+    },
+  })
+);
+
+// passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
+// routes
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 

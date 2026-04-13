@@ -1,13 +1,13 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const usersController = require('../controllers/usersController');
 
-router.get('/', usersController.getUsers);
-router.post('/', usersController.createUser);
-
-// Get current logged-in user
+// current user
 router.get("/me", (req, res) => {
-  res.json(req.user || null);
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ user: null });
+  }
+
+  res.json(req.user);
 });
 
 module.exports = router;
