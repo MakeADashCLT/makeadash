@@ -43,6 +43,62 @@ function RedditLogo() {
   );
 }
 
+function WeatherLogo() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="5" fill="#FDB813" />
+      <path
+        d="M12 2.5V5"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 19V21.5"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M2.5 12H5"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M19 12H21.5"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5.2 5.2L7 7"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M17 17L18.8 18.8"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M18.8 5.2L17 7"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7 17L5.2 18.8"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function createWidget(type, index) {
   if (type === 'reddit') {
     return {
@@ -50,6 +106,19 @@ function createWidget(type, index) {
       type: 'reddit',
       title: `Reddit ${index}`,
       width: 320,
+    };
+  }
+
+  if (type === 'weather') {
+    return {
+      id: crypto.randomUUID(),
+      type: 'weather',
+      title: `Weather ${index}`,
+      width: 360,
+      city: 'Charlotte',
+      loading: false,
+      error: '',
+      data: null,
     };
   }
 
@@ -61,16 +130,27 @@ function createWidget(type, index) {
   };
 }
 
-function WidgetColumn({ widget, onResize }) {
+function WidgetColumn({
+  widget,
+  onResize,
+  onWeatherCityChange,
+  onWeatherRefresh,
+}) {
   return (
     <div
-      className="deck-widget-column"
+      className={`deck-widget-column ${
+        widget.type === 'weather' ? 'deck-widget-column--weather' : ''
+      }`}
       style={{ width: `${widget.width}px` }}
     >
       <div className="deck-widget-header">
         <div>
           <p className="deck-widget-eyebrow">
-            {widget.type === 'reddit' ? 'REDDIT WIDGET' : 'EMPTY WIDGET'}
+            {widget.type === 'reddit'
+              ? 'REDDIT WIDGET'
+              : widget.type === 'weather'
+              ? 'WEATHER WIDGET'
+              : 'EMPTY WIDGET'}
           </p>
           <h3 className="deck-widget-title">{widget.title}</h3>
         </div>
@@ -96,7 +176,74 @@ function WidgetColumn({ widget, onResize }) {
       </div>
 
       <div className="deck-widget-body">
-        {widget.type === 'reddit' ? (
+        {widget.type === 'weather' ? (
+          <div className="weather-widget">
+            <div className="weather-widget-controls">
+              <input
+                type="text"
+                className="weather-widget-input"
+                value={widget.city}
+                onChange={(e) => onWeatherCityChange(widget.id, e.target.value)}
+                placeholder="Enter city"
+              />
+              <button
+                type="button"
+                className="deck-primary-btn"
+                onClick={() => onWeatherRefresh(widget.id)}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {widget.loading ? (
+              <div className="weather-widget-status">Loading weather...</div>
+            ) : widget.error ? (
+              <div className="weather-widget-status weather-widget-status--error">
+                {widget.error}
+              </div>
+            ) : widget.data ? (
+              <div className="weather-widget-card">
+                <div className="weather-widget-top">
+                  <div>
+                    <p className="weather-widget-location">
+                      {widget.data.city}
+                      {widget.data.state ? `, ${widget.data.state}` : ''}
+                    </p>
+                    <p className="weather-widget-country">{widget.data.country}</p>
+                  </div>
+                  <div className="weather-widget-temp">
+                    {Math.round(widget.data.temperature)}°
+                  </div>
+                </div>
+
+                <p className="weather-widget-condition">{widget.data.condition}</p>
+
+                <div className="weather-widget-stats">
+                  <div className="weather-stat">
+                    <span className="weather-stat-label">High</span>
+                    <span className="weather-stat-value">
+                      {Math.round(widget.data.high)}°
+                    </span>
+                  </div>
+                  <div className="weather-stat">
+                    <span className="weather-stat-label">Low</span>
+                    <span className="weather-stat-value">
+                      {Math.round(widget.data.low)}°
+                    </span>
+                  </div>
+                  <div className="weather-stat">
+                    <span className="weather-stat-label">Wind</span>
+                    <span className="weather-stat-value">
+                      {Math.round(widget.data.windSpeed)} mph
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="weather-widget-status">No weather loaded yet.</div>
+            )}
+          </div>
+        ) : widget.type === 'reddit' ? (
           <div className="deck-widget-placeholder reddit-widget-placeholder">
             <div className="reddit-widget-badge">
               <RedditLogo />
@@ -112,8 +259,8 @@ function WidgetColumn({ widget, onResize }) {
             <div className="deck-widget-plus">+</div>
             <p className="deck-widget-placeholder-title">Add content later</p>
             <p className="deck-widget-placeholder-text">
-              This column is ready for a future widget like Reddit, Instagram,
-              Twitter/X, Gmail, or Spotify.
+              This column is ready for a future widget like Weather, Reddit,
+              Gmail, Spotify, YouTube, or News.
             </p>
           </div>
         )}
@@ -128,12 +275,17 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
   if (!isOpen) return null;
 
   const services = [
-    {
-      id: 'reddit',
-      name: 'Reddit',
-      description: 'Feeds, subreddits, saved posts, notifications, and more later.',
-    },
-  ];
+  {
+    id: 'reddit',
+    name: 'Reddit',
+    description: 'Feeds, subreddits, saved posts, notifications, and more later.',
+  },
+  {
+    id: 'weather',
+    name: 'Weather',
+    description: 'Current conditions and today’s forecast for a city.',
+  },
+];
 
   const filteredServices = services.filter((service) =>
     service.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -194,6 +346,7 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
               >
                 <div className="widget-service-icon">
                   {service.id === 'reddit' && <RedditLogo />}
+                  {service.id === 'weather' && <WeatherLogo />}
                 </div>
 
                 <div className="widget-service-content">
@@ -211,7 +364,13 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
   );
 }
 
-function DeckArea({ widgets, onOpenWidgetPicker, onResizeWidget }) {
+function DeckArea({
+  widgets,
+  onOpenWidgetPicker,
+  onResizeWidget,
+  onWeatherCityChange,
+  onWeatherRefresh,
+}) {
   return (
     <section className="deck-panel">
       <div className="deck-panel-header">
@@ -255,6 +414,8 @@ function DeckArea({ widgets, onOpenWidgetPicker, onResizeWidget }) {
                 key={widget.id}
                 widget={widget}
                 onResize={onResizeWidget}
+                onWeatherCityChange={onWeatherCityChange}
+                onWeatherRefresh={onWeatherRefresh}
               />
             ))}
           </div>
@@ -283,6 +444,74 @@ export default function DashboardPage({ onLogout }) {
 
   const nextWidgetNumber = useMemo(() => widgets.length + 1, [widgets.length]);
 
+  async function fetchWeatherForWidget(widgetId, city) {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, loading: true, error: '' }
+          : widget
+      )
+    );
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/weather?city=${encodeURIComponent(city)}`
+      );
+
+      const text = await response.text();
+      console.log(text);
+      const data = JSON.parse(text);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch weather.');
+      }
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: '',
+                data,
+              }
+            : widget
+        )
+      );
+    } catch (error) {
+      console.error('Weather fetch failed:', error);
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: error.message || 'Unable to load weather.',
+              }
+            : widget
+        )
+      );
+    }
+  }
+
+  function handleWeatherCityChange(widgetId, value) {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, city: value }
+          : widget
+      )
+    );
+  }
+
+  function handleWeatherRefresh(widgetId) {
+    const widget = widgets.find((w) => w.id === widgetId);
+    if (!widget || !widget.city.trim()) return;
+
+    fetchWeatherForWidget(widgetId, widget.city.trim());
+  }
+
   function openWidgetPicker() {
     setIsWidgetModalOpen(true);
   }
@@ -292,8 +521,16 @@ export default function DashboardPage({ onLogout }) {
   }
 
   function handleAddWidgetByType(type) {
-    setWidgets((prev) => [...prev, createWidget(type, prev.length + 1)]);
+    const newWidget = createWidget(type, widgets.length + 1);
+
+    setWidgets((prev) => [...prev, newWidget]);
     closeWidgetPicker();
+
+    if (type === 'weather') {
+      setTimeout(() => {
+        fetchWeatherForWidget(newWidget.id, newWidget.city);
+      }, 0);
+    }
   }
 
   function handleResizeWidget(widgetId, delta) {
@@ -344,6 +581,8 @@ export default function DashboardPage({ onLogout }) {
           widgets={widgets}
           onOpenWidgetPicker={openWidgetPicker}
           onResizeWidget={handleResizeWidget}
+          onWeatherCityChange={handleWeatherCityChange}
+          onWeatherRefresh={handleWeatherRefresh}
         />
 
         <section className="dashboard-connections-grid">
