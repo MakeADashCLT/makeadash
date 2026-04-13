@@ -2,12 +2,62 @@ import { useMemo, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import './DashboardPage.css';
 
-function createWidget(index) {
+function RedditLogo() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" fill="#FF4500" />
+      <circle cx="9" cy="12" r="1.2" fill="white" />
+      <circle cx="15" cy="12" r="1.2" fill="white" />
+      <path
+        d="M8.5 15c1 .9 2.1 1.3 3.5 1.3s2.5-.4 3.5-1.3"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="17.8" cy="8.2" r="1.4" fill="white" />
+      <path
+        d="M13 8.2l2.8.6"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7.2 10.2c-1 0-1.8.8-1.8 1.8s.8 1.8 1.8 1.8"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16.8 10.2c1 0 1.8.8 1.8 1.8s-.8 1.8-1.8 1.8"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function createWidget(type, index) {
+  if (type === 'reddit') {
+    return {
+      id: crypto.randomUUID(),
+      type: 'reddit',
+      title: `Reddit ${index}`,
+      width: 320,
+    };
+  }
+
   return {
     id: crypto.randomUUID(),
+    type: 'empty',
     title: `Widget ${index}`,
     width: 320,
-    type: 'empty',
   };
 }
 
@@ -19,7 +69,9 @@ function WidgetColumn({ widget, onResize }) {
     >
       <div className="deck-widget-header">
         <div>
-          <p className="deck-widget-eyebrow">EMPTY WIDGET</p>
+          <p className="deck-widget-eyebrow">
+            {widget.type === 'reddit' ? 'REDDIT WIDGET' : 'EMPTY WIDGET'}
+          </p>
           <h3 className="deck-widget-title">{widget.title}</h3>
         </div>
 
@@ -44,20 +96,122 @@ function WidgetColumn({ widget, onResize }) {
       </div>
 
       <div className="deck-widget-body">
-        <div className="deck-widget-placeholder">
-          <div className="deck-widget-plus">+</div>
-          <p className="deck-widget-placeholder-title">Add content later</p>
-          <p className="deck-widget-placeholder-text">
-            This column is ready for a future widget like Instagram feed,
-            Twitter notifications, Gmail inbox, or Spotify player.
-          </p>
+        {widget.type === 'reddit' ? (
+          <div className="deck-widget-placeholder reddit-widget-placeholder">
+            <div className="reddit-widget-badge">
+              <RedditLogo />
+            </div>
+            <p className="deck-widget-placeholder-title">Reddit connected later</p>
+            <p className="deck-widget-placeholder-text">
+              This is a starter Reddit column. Later this can support subreddit
+              feeds, saved posts, notifications, messages, or custom searches.
+            </p>
+          </div>
+        ) : (
+          <div className="deck-widget-placeholder">
+            <div className="deck-widget-plus">+</div>
+            <p className="deck-widget-placeholder-title">Add content later</p>
+            <p className="deck-widget-placeholder-text">
+              This column is ready for a future widget like Reddit, Instagram,
+              Twitter/X, Gmail, or Spotify.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  if (!isOpen) return null;
+
+  const services = [
+    {
+      id: 'reddit',
+      name: 'Reddit',
+      description: 'Feeds, subreddits, saved posts, notifications, and more later.',
+    },
+  ];
+
+  const filteredServices = services.filter((service) =>
+    service.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="widget-modal-overlay" onClick={onClose}>
+      <div
+        className="widget-modal"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-widget-title"
+      >
+        <div className="widget-modal-header">
+          <div>
+            <p className="widget-modal-eyebrow">ADD WIDGET</p>
+            <h2 id="add-widget-title" className="widget-modal-title">
+              Choose a service
+            </h2>
+            <p className="widget-modal-subtitle">
+              Start with one available service for now.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="widget-modal-close"
+            onClick={onClose}
+            aria-label="Close add widget modal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="widget-modal-search-wrap">
+          <input
+            type="text"
+            className="widget-modal-search"
+            placeholder="Search services..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
+
+        <div className="widget-service-list">
+          {filteredServices.length === 0 ? (
+            <div className="widget-service-empty">
+              No services match that search yet.
+            </div>
+          ) : (
+            filteredServices.map((service) => (
+              <button
+                key={service.id}
+                type="button"
+                className="widget-service-item"
+                onClick={() => onSelectWidgetType(service.id)}
+              >
+                <div className="widget-service-icon">
+                  {service.id === 'reddit' && <RedditLogo />}
+                </div>
+
+                <div className="widget-service-content">
+                  <span className="widget-service-name">{service.name}</span>
+                  <span className="widget-service-description">
+                    {service.description}
+                  </span>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function DeckArea({ widgets, onAddWidget, onResizeWidget }) {
+function DeckArea({ widgets, onOpenWidgetPicker, onResizeWidget }) {
   return (
     <section className="deck-panel">
       <div className="deck-panel-header">
@@ -72,7 +226,7 @@ function DeckArea({ widgets, onAddWidget, onResizeWidget }) {
         <button
           type="button"
           className="deck-primary-btn"
-          onClick={onAddWidget}
+          onClick={onOpenWidgetPicker}
         >
           + Add Widget
         </button>
@@ -84,13 +238,12 @@ function DeckArea({ widgets, onAddWidget, onResizeWidget }) {
             <div className="deck-empty-icon">+</div>
             <h3 className="deck-empty-title">Your first deck is empty</h3>
             <p className="deck-empty-text">
-              Start by adding a widget column. Later, each column can become an
-              Instagram feed, DMs, Gmail inbox, Spotify player, or another service.
+              Start by adding a widget column. For now, we’ll support Reddit first.
             </p>
             <button
               type="button"
               className="deck-primary-btn"
-              onClick={onAddWidget}
+              onClick={onOpenWidgetPicker}
             >
               Add your first widget
             </button>
@@ -126,11 +279,21 @@ function ConnectionCard({ label, title, description, buttonText }) {
 
 export default function DashboardPage({ onLogout }) {
   const [widgets, setWidgets] = useState([]);
+  const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
 
   const nextWidgetNumber = useMemo(() => widgets.length + 1, [widgets.length]);
 
-  function handleAddWidget() {
-    setWidgets((prev) => [...prev, createWidget(prev.length + 1)]);
+  function openWidgetPicker() {
+    setIsWidgetModalOpen(true);
+  }
+
+  function closeWidgetPicker() {
+    setIsWidgetModalOpen(false);
+  }
+
+  function handleAddWidgetByType(type) {
+    setWidgets((prev) => [...prev, createWidget(type, prev.length + 1)]);
+    closeWidgetPicker();
   }
 
   function handleResizeWidget(widgetId, delta) {
@@ -148,7 +311,7 @@ export default function DashboardPage({ onLogout }) {
 
   return (
     <div className="dashboard-shell">
-      <Sidebar onAddWidget={handleAddWidget} onLogout={onLogout} />
+      <Sidebar onAddWidget={openWidgetPicker} onLogout={onLogout} />
 
       <main className="dashboard-main">
         <header className="dashboard-topbar">
@@ -166,7 +329,11 @@ export default function DashboardPage({ onLogout }) {
             </span>
 
             {onLogout && (
-              <button type="button" className="deck-secondary-btn" onClick={onLogout}>
+              <button
+                type="button"
+                className="deck-secondary-btn"
+                onClick={onLogout}
+              >
                 Log out
               </button>
             )}
@@ -175,9 +342,8 @@ export default function DashboardPage({ onLogout }) {
 
         <DeckArea
           widgets={widgets}
-          onAddWidget={handleAddWidget}
+          onOpenWidgetPicker={openWidgetPicker}
           onResizeWidget={handleResizeWidget}
-          nextWidgetNumber={nextWidgetNumber}
         />
 
         <section className="dashboard-connections-grid">
@@ -198,11 +364,17 @@ export default function DashboardPage({ onLogout }) {
           <ConnectionCard
             label="MORE SERVICES"
             title="More widgets coming"
-            description="Instagram, Twitter/X, notifications, DMs, and service-specific columns can plug into this same deck model."
+            description="Instagram, Twitter/X, notifications, DMs, and more can plug into this same deck model."
             buttonText="Coming Soon"
           />
         </section>
       </main>
+
+      <AddWidgetModal
+        isOpen={isWidgetModalOpen}
+        onClose={closeWidgetPicker}
+        onSelectWidgetType={handleAddWidgetByType}
+      />
     </div>
   );
 }
