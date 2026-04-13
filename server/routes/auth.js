@@ -3,19 +3,26 @@ const passport = require("passport");
 
 const router = express.Router();
 
-// Start Google OAuth login
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// start google login
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
 
-// Google OAuth callback
+// callback
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
+  passport.authenticate("google", {
+    failureRedirect: "/login",
+  }),
   (req, res) => {
-    res.redirect(process.env.CLIENT_URL); // Redirect to frontend
+    res.redirect(process.env.CLIENT_URL);
   }
 );
 
-// Logout route
+// logout
 router.get("/logout", (req, res) => {
   req.logout(() => {
     res.redirect(process.env.CLIENT_URL);
