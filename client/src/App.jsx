@@ -31,18 +31,19 @@ function ProtectedRoute({ isAuthenticated, children }) {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const handleLogin  = () => setIsAuthenticated(true)
-  const handleLogout = () => setIsAuthenticated(false)
+  const handleLogout = async () => {
+    await supabase.auth.signOut()  
+    setIsAuthenticated(false)
+  }
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session) {
-          setIsAuthenticated(true)
-        } else {
-          setIsAuthenticated(false)
-        }
+        setIsAuthenticated(!!session)
+        setLoading(false)
       }
     )
 
@@ -52,16 +53,17 @@ function App() {
   }, [])
   
   useEffect(() => {
-  const initSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
+    const initSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
 
-    if (session) {
-      setIsAuthenticated(true)
+      setIsAuthenticated(!!session)
+      setLoading(false)
     }
-  }
 
-  initSession()
-}, [])
+    initSession()
+  }, [])
+
+  if (loading) return null
 
   return (
     <Router>
@@ -83,7 +85,7 @@ function App() {
           element={
             isAuthenticated
               ? <Navigate to="/dashboard" replace />
-              : <LoginPage onLogin={handleLogin} />
+              : <LoginPage/>
           }
         />
 
