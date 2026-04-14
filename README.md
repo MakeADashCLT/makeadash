@@ -47,3 +47,4 @@ git add .
 git commit -m "msg"
 git push
 
+eb deploy (updates aws deployment manually)
