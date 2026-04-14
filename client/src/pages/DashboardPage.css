@@ -243,6 +243,24 @@
   background: #292623;
 }
 
+.deck-widget-remove-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #2a1717;
+  color: #ffb3aa;
+  border: 1px solid rgba(255, 120, 100, 0.22);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: 140ms ease;
+}
+
+.deck-widget-remove-btn:hover {
+  background: #3a1d1d;
+  border-color: rgba(255, 120, 100, 0.38);
+}
+
 .deck-widget-body {
   flex: 1;
   display: flex;
