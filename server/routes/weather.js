@@ -103,7 +103,9 @@ router.get('/', async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    console.error('Weather route error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Weather route error:', error);
+    }
     res.status(500).json({ error: 'Internal server error while fetching weather.' });
   }
 });
