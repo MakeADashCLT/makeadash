@@ -525,6 +525,22 @@
   }
 }
 
+.sortable-widget-item {
+  flex: 0 0 auto;
+}
+
+.sortable-widget-item:active {
+  cursor: grabbing;
+}
+
+.deck-columns {
+  align-items: flex-start;
+}
+
+.sortable-widget-item .deck-widget-column {
+  cursor: grab;
+}
+
 .deck-widget-column--weather {
   min-width: 360px;
 }

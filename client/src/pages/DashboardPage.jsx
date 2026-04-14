@@ -1,7 +1,22 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient'
 import Sidebar from '../components/Sidebar';
 import './DashboardPage.css';
+
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 
 function RedditLogo() {
@@ -74,28 +89,28 @@ function generateId() {
     Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-function createWidget(type, index) {
+function createWidget(type) {
   if (type === 'reddit') return {
-    id: generateId(), type: 'reddit', title: `Reddit ${index}`, width: 320,
+    id: generateId(), type: 'reddit', title: 'Reddit', width: 320,
   };
   if (type === 'weather') return {
-    id: generateId(), type: 'weather', title: `Weather ${index}`,
-    width: 360, city: 'Charlotte', loading: false, error: '', data: null,
+    id: generateId(), type: 'weather', title: 'Weather',
+    width: 400, city: 'Charlotte', loading: false, error: '', data: null,
   };
   if (type === 'steam') return {
-    id: generateId(), type: 'steam', title: `Steam ${index}`,
+    id: generateId(), type: 'steam', title: 'Steam',
     width: 480, query: '', loading: false, error: '', items: [],
   };
   if (type === 'anilist') return {
-    id: generateId(), type: 'anilist', title: `AniList ${index}`,
+    id: generateId(), type: 'anilist', title: 'AniList',
     width: 430, mode: 'today', loading: false, error: '', items: [], seasonLabel: '',
   };
   if (type === 'github') return {
-    id: generateId(), type: 'github', title: `GitHub ${index}`,
+    id: generateId(), type: 'github', title: 'GitHub',
     width: 360, username: '', loading: false, error: '', data: null,
   };
   return {
-    id: generateId(), type: 'empty', title: `Widget ${index}`, width: 320,
+    id: generateId(), type: 'empty', title: 'Widget', width: 320,
   };
 }
 
@@ -476,6 +491,33 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
   );
 }
 
+function SortableWidgetItem({ widget, children }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: widget.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="sortable-widget-item"
+      {...attributes}
+      {...listeners}
+    >
+      {children}
+    </div>
+  );
+}
+
 
 function DeckArea({
   widgets,
@@ -489,7 +531,16 @@ function DeckArea({
   onGithubUsernameChange,
   onGithubSearch,
   onRemoveWidget,
+  onDragEnd,
 }) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
   return (
     <section className="deck-panel">
       <div className="deck-panel-header">
@@ -509,30 +560,42 @@ function DeckArea({
             <div className="deck-empty-icon">+</div>
             <h3 className="deck-empty-title">Your first deck is empty</h3>
             <p className="deck-empty-text">
-              Start by adding a widget column. For now, we'll support Reddit first.
+              Start by adding a widget column.
             </p>
             <button type="button" className="deck-primary-btn" onClick={onOpenWidgetPicker}>
               Add your first widget
             </button>
           </div>
         ) : (
-          <div className="deck-columns">
-            {widgets.map((widget) => (
-              <WidgetColumn
-                key={widget.id}
-                widget={widget}
-                onResize={onResizeWidget}
-                onWeatherCityChange={onWeatherCityChange}
-                onWeatherRefresh={onWeatherRefresh}
-                onSteamQueryChange={onSteamQueryChange}
-                onSteamSearch={onSteamSearch}
-                onAniListModeChange={onAniListModeChange}
-                onGithubUsernameChange={onGithubUsernameChange}
-                onGithubSearch={onGithubSearch}
-                onRemoveWidget={onRemoveWidget}
-              />
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={onDragEnd}
+          >
+            <SortableContext
+              items={widgets.map((widget) => widget.id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              <div className="deck-columns">
+                {widgets.map((widget) => (
+                  <SortableWidgetItem key={widget.id} widget={widget}>
+                    <WidgetColumn
+                      widget={widget}
+                      onResize={onResizeWidget}
+                      onWeatherCityChange={onWeatherCityChange}
+                      onWeatherRefresh={onWeatherRefresh}
+                      onSteamQueryChange={onSteamQueryChange}
+                      onSteamSearch={onSteamSearch}
+                      onAniListModeChange={onAniListModeChange}
+                      onGithubUsernameChange={onGithubUsernameChange}
+                      onGithubSearch={onGithubSearch}
+                      onRemoveWidget={onRemoveWidget}
+                    />
+                  </SortableWidgetItem>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </section>
@@ -555,8 +618,7 @@ function ConnectionCard({ label, title, description, buttonText }) {
 export default function DashboardPage({ onLogout }) {
   const [widgets, setWidgets] = useState([]);
   const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
-
-  const nextWidgetNumber = useMemo(() => widgets.length + 1, [widgets.length]);
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     loadWidgets();
@@ -576,33 +638,98 @@ export default function DashboardPage({ onLogout }) {
       return;
     }
 
-    const formatted = data.map((w) => ({
-      id: w.id,
-      type: w.config.type,
-      title: w.name,
-      width: w.config.width,
-      city: w.config.city,
-      ...w.config,
-    }));
+    const formatted = data.map((w) => {
+      const { id: _configId, ...safeConfig } = w.config || {};
+
+      return {
+        ...safeConfig,
+        id: w.id,
+        type: safeConfig.type,
+        title: w.name,
+        width: safeConfig.width,
+        city: safeConfig.city,
+      };
+    });
 
     setWidgets(formatted);
   }
 
   async function handleRemoveWidget(widgetId) {
-    const { data: userData } = await supabase.auth.getUser();
+    console.log('Attempting to delete widget:', widgetId);
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      console.error('Could not get current user for delete:', userError);
+      return;
+    }
+
     const user = userData.user;
-    const { error } = await supabase
+    console.log('Current user id:', user.id);
+
+    // Optional: verify the row exists before deleting
+    const { data: existingRows, error: lookupError } = await supabase
+      .from('widgets')
+      .select('id, user_id, name')
+      .eq('id', widgetId);
+
+    console.log('Widget rows matching id before delete:', existingRows);
+    if (lookupError) {
+      console.error('Lookup before delete failed:', lookupError);
+    }
+
+    const { data: deletedRows, error } = await supabase
       .from('widgets')
       .delete()
       .eq('id', widgetId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .select();
 
     if (error) {
       console.error('Failed to delete widget:', error);
       return;
     }
 
+    console.log('Deleted rows:', deletedRows);
+
     setWidgets((prev) => prev.filter((widget) => widget.id !== widgetId));
+
+    // Optional hard refresh from DB to confirm truth
+    await loadWidgets();
+  }
+
+  async function persistWidgetOrder(reorderedWidgets) {
+    const updates = reorderedWidgets.map((widget, index) =>
+      supabase
+        .from('widgets')
+        .update({ order_index: index })
+        .eq('id', widget.id)
+    );
+
+    const results = await Promise.all(updates);
+    const failed = results.find((result) => result.error);
+
+    if (failed) {
+      console.error('Failed to persist widget order:', failed.error);
+    }
+  }
+
+  async function handleDragEnd(event) {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = widgets.findIndex((widget) => widget.id === active.id);
+    const newIndex = widgets.findIndex((widget) => widget.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(widgets, oldIndex, newIndex).map((widget, index) => ({
+      ...widget,
+      order_index: index,
+    }));
+
+    setWidgets(reordered);
+    await persistWidgetOrder(reordered);
   }
 
   // ── Weather ─────────────────────────────────────────────────────────────────
@@ -612,7 +739,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const response = await fetch(
-        `http://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/weather?city=${encodeURIComponent(city)}`
+        `${API_BASE}/api/weather?city=${encodeURIComponent(city)}`
       );
       const text = await response.text();
       const data = JSON.parse(text);
@@ -648,7 +775,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const response = await fetch(
-        `http://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/steam/featured?q=${encodeURIComponent(query)}`
+        `${API_BASE}/api/steam/featured?q=${encodeURIComponent(query)}`
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to fetch Steam games.');
@@ -685,7 +812,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const endpoint = mode === 'today' ? 'today' : mode === 'week' ? 'week' : 'season';
-      const response = await fetch(`http://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/anilist/${endpoint}`);
+      const response = await fetch(`${API_BASE}/api/anilist/${endpoint}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to fetch AniList data.');
       setWidgets((prev) =>
@@ -731,7 +858,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const res = await fetch(
-        `http://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/github/user?username=${encodeURIComponent(username)}`,
+        `${API_BASE}/api/github/user?username=${encodeURIComponent(username)}`,
         { credentials: 'include' }
       );
       const data = await res.json();
@@ -762,19 +889,21 @@ export default function DashboardPage({ onLogout }) {
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
 
-    const newWidget = createWidget(type, widgets.length + 1);
+    const newWidget = createWidget(type);
 
     const { data, error } = await supabase
       .from('widgets')
       .insert({
         user_id: user.id,
         name: newWidget.title,
+        order_index: widgets.length,
         config: {
           type: newWidget.type,
           width: newWidget.width,
           city: newWidget.city,
           query: newWidget.query,
           mode: newWidget.mode,
+          username: newWidget.username,
         },
       })
       .select()
@@ -788,6 +917,7 @@ export default function DashboardPage({ onLogout }) {
     const savedWidget = {
       ...newWidget,
       id: data.id,
+      order_index: data.order_index ?? widgets.length,
     };
 
     setWidgets((prev) => [...prev, savedWidget]);
@@ -858,6 +988,7 @@ export default function DashboardPage({ onLogout }) {
           onGithubUsernameChange={handleGithubUsernameChange}
           onGithubSearch={handleGithubSearch}
           onRemoveWidget={handleRemoveWidget}
+          onDragEnd={handleDragEnd}
         />
 
         <section className="dashboard-connections-grid">
