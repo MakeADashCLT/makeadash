@@ -15,7 +15,7 @@ const githubRoutes = require("../routes/github");
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: true,
   credentials: true,
 }));
 
@@ -39,6 +39,15 @@ app.use("/users", userRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use("/api/steam", steamRoutes);
 app.use("/api/anilist", anilistRoutes);
-app.use('/api/github', githubRoutes);       
+app.use('/api/github', githubRoutes);     
+
+const path = require("path");
+
+// Serve React build
+app.use(express.static(path.join(__dirname, "../../client/dist")));
+
+app.get("/{*splat}", (req, res) => {
+  res.sendFile(path.join(__dirname, "../../client/build/index.html"));
+});
 
 module.exports = app;
