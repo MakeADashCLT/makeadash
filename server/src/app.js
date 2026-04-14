@@ -8,6 +8,7 @@ const cors = require("cors");
 //const authRoutes = require("../routes/auth");
 const userRoutes = require("../routes/users");
 const weatherRoutes = require('../routes/weather');
+const steamRoutes = require("../routes/steam");
 
 const app = express();
 
@@ -34,6 +35,6 @@ app.use(session({
 
 app.use("/users", userRoutes);
 app.use('/api/weather', weatherRoutes);
-
+app.use("/api/steam", steamRoutes);
 
 module.exports = app;
