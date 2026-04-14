@@ -585,10 +585,13 @@ export default function DashboardPage({ onLogout }) {
   }
 
   async function handleRemoveWidget(widgetId) {
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
     const { error } = await supabase
       .from('widgets')
       .delete()
-      .eq('id', widgetId);
+      .eq('id', widgetId)
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Failed to delete widget:', error);
@@ -763,7 +766,11 @@ export default function DashboardPage({ onLogout }) {
         user_id: user.id,
         name: newWidget.title,
         config: {
-          ...newWidget,
+          type: newWidget.type,
+          width: newWidget.width,
+          city: newWidget.city,
+          query: newWidget.query,
+          mode: newWidget.mode,
         },
       })
       .select()
