@@ -761,17 +761,16 @@ export default function DashboardPage({ onLogout }) {
 
     closeWidgetPicker();
 
+    // optional auto-loads
     if (type === 'weather') {
-      setTimeout(() => {
-        fetchWeatherForWidget(savedWidget.id, savedWidget.city);
-      }, 0);
+      setTimeout(() => fetchWeatherForWidget(savedWidget.id, savedWidget.city), 0);
     }
-    setWidgets((prev) => [...prev, newWidget]);
-    closeWidgetPicker();
-
-    if (type === 'weather') setTimeout(() => fetchWeatherForWidget(newWidget.id, newWidget.city), 0);
-    if (type === 'steam')   setTimeout(() => fetchSteamForWidget(newWidget.id, ''), 0);
-    if (type === 'anilist') setTimeout(() => fetchAniListForWidget(newWidget.id, 'today'), 0);
+    if (type === 'steam') {
+      setTimeout(() => fetchSteamForWidget(savedWidget.id, ''), 0);
+    }
+    if (type === 'anilist') {
+      setTimeout(() => fetchAniListForWidget(savedWidget.id, 'today'), 0);
+    }
   }
 
   function handleResizeWidget(widgetId, delta) {
