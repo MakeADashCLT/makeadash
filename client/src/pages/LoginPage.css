@@ -148,3 +148,65 @@
   .lp-card { padding: 28px 20px 22px; }
   .lp-headline { font-size: 2.2rem; }
 }
+
+/* =========================
+   SIGNUP PAGE ADDITIONS
+   ========================= */
+
+/* Slightly taller card for multi-field form */
+.lp-card--signup {
+  padding: 36px 32px 32px;
+}
+
+/* Stack extra fields nicely */
+.lp-form--signup {
+  gap: 14px;
+}
+
+/* Make confirm password feel grouped */
+.lp-field--split {
+  margin-top: -4px;
+}
+
+/* Signup headline variation (optional accent) */
+.lp-headline--signup .lp-headline-accent {
+  color: #6366f1;
+}
+
+/* Helper text under inputs */
+.lp-helper {
+  font-size: 11px;
+  color: #5a5957;
+  margin-top: -6px;
+}
+
+/* Strength indicator (optional future use) */
+.lp-password-strength {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.lp-password-strength-bar {
+  height: 100%;
+  width: 40%;
+  background: #4f98a3;
+  transition: width 200ms ease;
+}
+
+/* Signup CTA variation */
+.lp-btn--signup {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+}
+
+.lp-btn--signup:hover {
+  filter: brightness(1.1);
+}
+
+/* Switch link spacing */
+.lp-switch-auth {
+  margin-top: 18px;
+}
