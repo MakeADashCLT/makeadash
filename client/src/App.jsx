@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
 import WorkboardsPage from './pages/WorkboardsPage'
 import './App.css'
@@ -53,6 +54,16 @@ function App() {
             isAuthenticated
               ? <Navigate to="/dashboard" replace />
               : <LoginPage onLogin={handleLogin} />
+          }
+        />
+
+        {/* Signup route */}
+        <Route
+          path="/signup"
+          element={
+            isAuthenticated
+              ? <Navigate to="/dashboard" replace />
+              : <SignupPage onSignup={handleLogin} />
           }
         />
 
