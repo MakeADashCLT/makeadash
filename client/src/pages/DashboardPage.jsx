@@ -84,6 +84,20 @@ function GitHubLogo() {
   );
 }
 
+function CalendarLogo() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="3" fill="#1f2937" />
+      <rect x="3" y="5" width="18" height="4" rx="3" fill="#4f98a3" />
+      <path d="M8 3V7" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M16 3V7" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+      <rect x="7" y="12" width="3" height="3" rx="1" fill="white" />
+      <rect x="12" y="12" width="3" height="3" rx="1" fill="white" opacity="0.75" />
+      <rect x="7" y="17" width="3" height="3" rx="1" fill="white" opacity="0.75" />
+    </svg>
+  );
+}
+
 function generateId() {
   return crypto?.randomUUID?.() ??
     Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -108,6 +122,17 @@ function createWidget(type) {
   if (type === 'github') return {
     id: generateId(), type: 'github', title: 'GitHub',
     width: 360, username: '', loading: false, error: '', data: null,
+  };
+  if (type === 'calendar') return {
+    id: generateId(),
+    type: 'calendar',
+    title: 'Calendar',
+    width: 430,
+    loading: false,
+    error: '',
+    events: [],
+    connected: false,
+    view: 'today',
   };
   return {
     id: generateId(), type: 'empty', title: 'Widget', width: 320,
@@ -139,6 +164,8 @@ function WidgetColumn({
   onGithubUsernameChange,
   onGithubSearch,
   onRemoveWidget,
+  onConnectGoogleCalendar,
+  onFetchCalendarEvents,
 }) {
   return (
     <div
@@ -146,7 +173,9 @@ function WidgetColumn({
         widget.type === 'weather' ? 'deck-widget-column--weather' :
         widget.type === 'steam'   ? 'deck-widget-column--steam'   :
         widget.type === 'anilist' ? 'deck-widget-column--anilist' :
-        widget.type === 'github'  ? 'deck-widget-column--github'  : ''
+        widget.type === 'github'  ? 'deck-widget-column--github'  : 
+        widget.type === 'calendar' ? 'deck-widget-column--calendar' :
+        ''
       }`}
       style={{ width: `${widget.width}px` }}
     >
@@ -157,7 +186,8 @@ function WidgetColumn({
              widget.type === 'weather' ? 'WEATHER WIDGET' :
              widget.type === 'steam'   ? 'STEAM WIDGET'   :
              widget.type === 'anilist' ? 'ANILIST WIDGET' :
-             widget.type === 'github'  ? 'GITHUB WIDGET'  : 'EMPTY WIDGET'}
+             widget.type === 'github'  ? 'GITHUB WIDGET'  :
+             widget.type === 'calendar'? 'CALENDAR WIDGET' : 'EMPTY WIDGET'}
           </p>
           <h3 className="deck-widget-title">{widget.title}</h3>
         </div>
@@ -410,6 +440,76 @@ function WidgetColumn({
           </div>
         )}
 
+        {/* ── Calendar ── */}
+        {widget.type === 'calendar' && (
+          <div className="calendar-widget">
+            {!widget.connected ? (
+              <div className="calendar-widget-empty">
+                <p className="calendar-widget-title-text">Connect Google Calendar</p>
+                <p className="calendar-widget-text">
+                  Grant read access only when you want to use this widget.
+                </p>
+                <button
+                  type="button"
+                  className="deck-primary-btn"
+                  onClick={() => onConnectGoogleCalendar()}
+                >
+                  Connect Calendar
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="calendar-view-toggle">
+                  <button
+                    type="button"
+                    className={`calendar-view-btn ${widget.view === 'today' ? 'calendar-view-btn--active' : ''}`}
+                    onClick={() => onFetchCalendarEvents(widget.id, 'today')}
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    className={`calendar-view-btn ${widget.view === 'week' ? 'calendar-view-btn--active' : ''}`}
+                    onClick={() => onFetchCalendarEvents(widget.id, 'week')}
+                  >
+                    This Week
+                  </button>
+                </div>
+
+                {widget.loading ? (
+                  <div className="calendar-widget-status">Loading events...</div>
+                ) : widget.error ? (
+                  <div className="calendar-widget-status calendar-widget-status--error">
+                    {widget.error}
+                  </div>
+                ) : (
+                  <div className="calendar-events-list">
+                    {widget.events?.length > 0 ? (
+                      widget.events.map((event) => (
+                        <div key={event.id} className="calendar-event-card">
+                          <div className="calendar-event-main">
+                            <p className="calendar-event-title">{event.summary || 'Untitled event'}</p>
+                            <p className="calendar-event-time">
+                              {formatCalendarEventTime(event.start, event.end)}
+                            </p>
+                            {event.location ? (
+                              <p className="calendar-event-location">{event.location}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="calendar-widget-status">
+                        No events found for this view.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         {/* ── Empty ── */}
         {widget.type === 'empty' && (
           <div className="deck-widget-placeholder">
@@ -438,6 +538,7 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
     { id: 'steam',   name: 'Steam',   description: 'Featured games, store cards, and quick search.' },
     { id: 'anilist', name: 'AniList', description: 'Anime airing today, this week, and upcoming seasonal shows.' },
     { id: 'github',  name: 'GitHub',  description: 'Profile stats and recently updated repos for any user.' },
+    { id: 'calendar', name: 'Google Calendar', description: 'Connect and view your calendars and upcoming events.' },
   ];
 
   const filteredServices = services.filter((service) =>
@@ -477,6 +578,8 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
                   {service.id === 'steam'   && <SteamLogo />}
                   {service.id === 'anilist' && <AniListLogo />}
                   {service.id === 'github'  && <GitHubLogo />}
+                  {service.id === 'calendar' && <CalendarLogo />}
+
                 </div>
                 <div className="widget-service-content">
                   <span className="widget-service-name">{service.name}</span>
@@ -532,6 +635,8 @@ function DeckArea({
   onGithubSearch,
   onRemoveWidget,
   onDragEnd,
+  onConnectGoogleCalendar,
+  onFetchCalendarEvents,
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -590,6 +695,8 @@ function DeckArea({
                       onGithubUsernameChange={onGithubUsernameChange}
                       onGithubSearch={onGithubSearch}
                       onRemoveWidget={onRemoveWidget}
+                      onConnectGoogleCalendar={onConnectGoogleCalendar}
+                      onFetchCalendarEvents={onFetchCalendarEvents}
                     />
                   </SortableWidgetItem>
                 ))}
@@ -612,6 +719,43 @@ function ConnectionCard({ label, title, description, buttonText }) {
       <button type="button" className="deck-secondary-btn">{buttonText}</button>
     </section>
   );
+}
+
+function formatCalendarEventTime(startObj, endObj) {
+  const startValue = startObj?.dateTime || startObj?.date;
+  const endValue = endObj?.dateTime || endObj?.date;
+
+  if (!startValue) return 'Time TBA';
+
+  const start = new Date(startValue);
+
+  // all-day event
+  if (startObj?.date && !startObj?.dateTime) {
+    return start.toLocaleDateString([], {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  if (!endValue) {
+    return start.toLocaleString([], {
+      weekday: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
+
+  const end = new Date(endValue);
+
+  return `${start.toLocaleString([], {
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  })} – ${end.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  })}`;
 }
 
 
@@ -666,7 +810,7 @@ export default function DashboardPage({ onLogout }) {
     const user = userData.user;
     console.log('Current user id:', user.id);
 
-    // Optional: verify the row exists before deleting
+    // verify the row exists before deleting
     const { data: existingRows, error: lookupError } = await supabase
       .from('widgets')
       .select('id, user_id, name')
@@ -692,9 +836,6 @@ export default function DashboardPage({ onLogout }) {
     console.log('Deleted rows:', deletedRows);
 
     setWidgets((prev) => prev.filter((widget) => widget.id !== widgetId));
-
-    // Optional hard refresh from DB to confirm truth
-    await loadWidgets();
   }
 
   async function persistWidgetOrder(reorderedWidgets) {
@@ -881,6 +1022,139 @@ export default function DashboardPage({ onLogout }) {
     fetchGithubForWidget(widgetId, widget.username.trim());
   }
 
+  // ── Calendar ───────────────────────────────────────────────────────────
+  async function connectGoogleCalendar() {
+    localStorage.setItem('connect_google_calendar', 'true');
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+        scopes: 'https://www.googleapis.com/auth/calendar.readonly',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+
+    if (error) {
+      console.error('Calendar OAuth failed:', error);
+    }
+  }
+
+  async function fetchCalendarEventsForWidget(widgetId, view = 'today') {
+    setWidgets((prev) =>
+      prev.map((w) =>
+        w.id === widgetId ? { ...w, loading: true, error: '', view } : w
+      )
+    );
+
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      const token = data?.session?.provider_token;
+      if (!token) {
+        throw new Error('No Google provider token found. Please connect Google Calendar.');
+      }
+
+      const now = new Date();
+
+      let timeMin;
+      let timeMax;
+
+      if (view === 'today') {
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(now);
+        end.setHours(23, 59, 59, 999);
+
+        timeMin = start.toISOString();
+        timeMax = end.toISOString();
+      } else {
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(now);
+        end.setDate(end.getDate() + 7);
+        end.setHours(23, 59, 59, 999);
+
+        timeMin = start.toISOString();
+        timeMax = end.toISOString();
+      }
+
+      const params = new URLSearchParams({
+        timeMin,
+        timeMax,
+        singleEvents: 'true',
+        orderBy: 'startTime',
+        maxResults: view === 'today' ? '20' : '50',
+      });
+
+      const res = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error?.message || 'Failed to fetch calendar events.');
+      }
+
+      setWidgets((prev) =>
+        prev.map((w) =>
+          w.id === widgetId
+            ? {
+                ...w,
+                loading: false,
+                error: '',
+                connected: true,
+                events: json.items || [],
+                view,
+              }
+            : w
+        )
+      );
+    } catch (error) {
+      setWidgets((prev) =>
+        prev.map((w) =>
+          w.id === widgetId
+            ? {
+                ...w,
+                loading: false,
+                error: error.message || 'Unable to load calendar events.',
+              }
+            : w
+        )
+      );
+    }
+  }
+
+  useEffect(() => {
+    async function tryCalendarReconnect() {
+      const shouldConnect = localStorage.getItem('connect_google_calendar');
+      if (shouldConnect !== 'true') return;
+
+      localStorage.removeItem('connect_google_calendar');
+
+      const calendarWidget = widgets.find((w) => w.type === 'calendar');
+      if (!calendarWidget) return;
+
+      await fetchCalendarEventsForWidget(calendarWidget.id, 'today');
+    }
+
+    if (widgets.length > 0) {
+      tryCalendarReconnect();
+    }
+  }, [widgets]);
+
   // ── Widget picker ────────────────────────────────────────────────────────────
   function openWidgetPicker()  { setIsWidgetModalOpen(true);  }
   function closeWidgetPicker() { setIsWidgetModalOpen(false); }
@@ -939,6 +1213,10 @@ export default function DashboardPage({ onLogout }) {
     if (type === 'github') {
       // no auto-fetch until username entered
     }
+
+    if (type === 'calendar') {
+    // no auto-fetch until user clicks connect
+    }
   }
 
   function handleResizeWidget(widgetId, delta) {
@@ -989,6 +1267,8 @@ export default function DashboardPage({ onLogout }) {
           onGithubSearch={handleGithubSearch}
           onRemoveWidget={handleRemoveWidget}
           onDragEnd={handleDragEnd}
+          onConnectGoogleCalendar={connectGoogleCalendar}
+          onFetchCalendarEvents={fetchCalendarEventsForWidget}
         />
 
         <section className="dashboard-connections-grid">
