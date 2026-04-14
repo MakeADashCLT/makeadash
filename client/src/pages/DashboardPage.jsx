@@ -69,29 +69,33 @@ function GitHubLogo() {
   );
 }
 
+function generateId() {
+  return crypto?.randomUUID?.() ??
+    Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 
 function createWidget(type, index) {
   if (type === 'reddit') return {
-    id: crypto.randomUUID(), type: 'reddit', title: `Reddit ${index}`, width: 320,
+    id: generateId(), type: 'reddit', title: `Reddit ${index}`, width: 320,
   };
   if (type === 'weather') return {
-    id: crypto.randomUUID(), type: 'weather', title: `Weather ${index}`,
+    id: generateId(), type: 'weather', title: `Weather ${index}`,
     width: 360, city: 'Charlotte', loading: false, error: '', data: null,
   };
   if (type === 'steam') return {
-    id: crypto.randomUUID(), type: 'steam', title: `Steam ${index}`,
+    id: generateId(), type: 'steam', title: `Steam ${index}`,
     width: 480, query: '', loading: false, error: '', items: [],
   };
   if (type === 'anilist') return {
-    id: crypto.randomUUID(), type: 'anilist', title: `AniList ${index}`,
+    id: generateId(), type: 'anilist', title: `AniList ${index}`,
     width: 430, mode: 'today', loading: false, error: '', items: [], seasonLabel: '',
   };
   if (type === 'github') return {
-    id: crypto.randomUUID(), type: 'github', title: `GitHub ${index}`,
+    id: generateId(), type: 'github', title: `GitHub ${index}`,
     width: 360, username: '', loading: false, error: '', data: null,
   };
   return {
-    id: crypto.randomUUID(), type: 'empty', title: `Widget ${index}`, width: 320,
+    id: generateId(), type: 'empty', title: `Widget ${index}`, width: 320,
   };
 }
 
