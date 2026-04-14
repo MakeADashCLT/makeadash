@@ -58,7 +58,9 @@ router.get('/featured', async (req, res) => {
       items: results.filter(Boolean),
     });
   } catch (error) {
-    console.error('Steam featured route error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Steam featured route error:', error);
+    }
     res.status(500).json({
       error: 'Internal server error while fetching Steam games.',
     });

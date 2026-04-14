@@ -138,7 +138,9 @@ router.get('/today', async (_req, res) => {
 
     res.json({ items });
   } catch (error) {
-    console.error('AniList today route error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('AniList today route error:', error);
+    }
     res.status(500).json({ error: error.message || 'Failed to fetch airing anime.' });
   }
 });
@@ -200,7 +202,9 @@ router.get('/week', async (_req, res) => {
 
     res.json({ items });
   } catch (error) {
-    console.error('AniList week route error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('AniList week route error:', error);
+    }
     res.status(500).json({ error: error.message || 'Failed to fetch weekly anime schedule.' });
   }
 });
@@ -267,7 +271,9 @@ router.get('/season', async (_req, res) => {
       items,
     });
   } catch (error) {
-    console.error('AniList season route error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('AniList season route error:', error);
+    }
     res.status(500).json({ error: error.message || 'Failed to fetch upcoming seasonal anime.' });
   }
 });
