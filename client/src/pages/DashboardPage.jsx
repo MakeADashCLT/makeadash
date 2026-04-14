@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient'
 import Sidebar from '../components/Sidebar';
 import './DashboardPage.css';
 
@@ -542,6 +543,36 @@ export default function DashboardPage({ onLogout }) {
 
   const nextWidgetNumber = useMemo(() => widgets.length + 1, [widgets.length]);
 
+  useEffect(() => {
+    loadWidgets();
+  }, []);
+
+  async function loadWidgets() {
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+
+    const { data, error } = await supabase
+      .from('widgets')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const formatted = data.map((w) => ({
+      id: w.id,
+      type: w.config.type,
+      title: w.name,
+      width: w.config.width,
+      city: w.config.city,
+      ...w.config,
+    }));
+
+    setWidgets(formatted);
+  }
+
   // ── Weather ─────────────────────────────────────────────────────────────────
   async function fetchWeatherForWidget(widgetId, city) {
     setWidgets((prev) =>
@@ -695,8 +726,46 @@ export default function DashboardPage({ onLogout }) {
   function openWidgetPicker()  { setIsWidgetModalOpen(true);  }
   function closeWidgetPicker() { setIsWidgetModalOpen(false); }
 
-  function handleAddWidgetByType(type) {
+  async function handleAddWidgetByType(type) {
+    
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+
     const newWidget = createWidget(type, widgets.length + 1);
+
+    const { data, error } = await supabase
+      .from('widgets')
+      .insert({
+        user_id: user.id,
+        name: newWidget.title,
+        config: {
+          type: newWidget.type,
+          width: newWidget.width,
+          city: newWidget.city || null,
+        },
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const savedWidget = {
+      ...newWidget,
+      id: data.id,
+    };
+
+    setWidgets((prev) => [...prev, savedWidget]);
+
+    closeWidgetPicker();
+
+    if (type === 'weather') {
+      setTimeout(() => {
+        fetchWeatherForWidget(savedWidget.id, savedWidget.city);
+      }, 0);
+    }
     setWidgets((prev) => [...prev, newWidget]);
     closeWidgetPicker();
 
