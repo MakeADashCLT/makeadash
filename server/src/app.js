@@ -1,45 +1,39 @@
 const express = require("express");
 const session = require("express-session");
-const passport = require("passport");
+//const passport = require("passport");
+//require("../config/passport"); // Load Passport config
+
 const cors = require("cors");
 
-require("../config/passport");
-
-const authRoutes = require("../routes/auth");
+//const authRoutes = require("../routes/auth");
 const userRoutes = require("../routes/users");
+const weatherRoutes = require('../routes/weather');
 
 const app = express();
 
-// CORS
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 
 app.use(express.json());
 
-// session
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false, // true in production (HTTPS)
-      sameSite: "lax",
-    },
-  })
-);
+// Express session setup
+app.use(session({
+  secret: process.env.SESSION_SECRET || "default_secret",
+  resave: false,
+  saveUninitialized: false,
+}));
 
-// passport
-app.use(passport.initialize());
-app.use(passport.session());
+// Initialize Passport
+//app.use(passport.initialize());
+//app.use(passport.session());
 
-// routes
-app.use("/auth", authRoutes);
+// Routes
+//app.use("/auth", authRoutes);
+
 app.use("/users", userRoutes);
+app.use('/api/weather', weatherRoutes);
+
 
 module.exports = app;
