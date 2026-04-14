@@ -1,405 +1,1011 @@
-import { useState } from 'react'
-import Sidebar from '../components/Sidebar'
-import './DashboardPage.css'
+import { useMemo, useState } from 'react';
+import Sidebar from '../components/Sidebar';
+import './DashboardPage.css';
 
-// ─── SVG Icons ───────────────────────────────────────────────────────────────
-
-const Icon = {
-  Search: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+function RedditLogo() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" fill="#FF4500" />
+      <circle cx="9" cy="12" r="1.2" fill="white" />
+      <circle cx="15" cy="12" r="1.2" fill="white" />
+      <path
+        d="M8.5 15c1 .9 2.1 1.3 3.5 1.3s2.5-.4 3.5-1.3"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="17.8" cy="8.2" r="1.4" fill="white" />
+      <path
+        d="M13 8.2l2.8.6"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7.2 10.2c-1 0-1.8.8-1.8 1.8s.8 1.8 1.8 1.8"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16.8 10.2c1 0 1.8.8 1.8 1.8s-.8 1.8-1.8 1.8"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
     </svg>
-  ),
-  Bell: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-    </svg>
-  ),
-  Grid: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="7" rx="1"/>
-      <rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/>
-      <rect x="14" y="14" width="7" height="7" rx="1"/>
-    </svg>
-  ),
-  GradCap: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-      <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-    </svg>
-  ),
-  MoreH: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>
-    </svg>
-  ),
-  SkipBack: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/>
-    </svg>
-  ),
-  SkipFwd: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
-    </svg>
-  ),
-  Pause: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <rect x="6" y="4" width="4" height="16" rx="1"/>
-      <rect x="14" y="4" width="4" height="16" rx="1"/>
-    </svg>
-  ),
-  Play: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <polygon points="5 3 19 12 5 21 5 3"/>
-    </svg>
-  ),
-  Shuffle: () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
-      <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
-    </svg>
-  ),
-  Repeat: () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="17 1 21 5 17 9"/>
-      <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-      <polyline points="7 23 3 19 7 15"/>
-      <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-    </svg>
-  ),
-  Mail: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-      <polyline points="22,6 12,13 2,6"/>
-    </svg>
-  ),
-  Discord: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20.3 4.4A18.4 18.4 0 0 0 15.4 3a12.7 12.7 0 0 0-.6 1.2 17 17 0 0 0-5.1 0A12.7 12.7 0 0 0 9 3a18.4 18.4 0 0 0-4.9 1.4C1.7 8.4 1 12.3 1.3 16.2a18.5 18.5 0 0 0 5.6 2.8 13.9 13.9 0 0 0 1.2-2 12 12 0 0 1-1.9-.9l.5-.3a13.2 13.2 0 0 0 11.3 0l.5.3a12 12 0 0 1-1.9.9 13.9 13.9 0 0 0 1.2 2 18.5 18.5 0 0 0 5.6-2.8c.4-4.5-.7-8.4-3-11.8z"/>
-    </svg>
-  ),
-  Plus: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-  ),
-  Emoji: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-      <line x1="9" y1="9" x2="9.01" y2="9"/>
-      <line x1="15" y1="9" x2="15.01" y2="9"/>
-    </svg>
-  ),
-  NowPlaying: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f98a3"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
-      <line x1="12" y1="2" x2="12" y2="5"/>
-    </svg>
-  ),
+  );
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const ASSIGNMENTS = [
-  { id: 1, title: 'Digital Typography Final', course: 'Advanced Design Studio', time: '11:59 PM', tag: 'TODAY',  urgent: true  },
-  { id: 2, title: 'Research Methodology',     course: 'Cognitive Science',       time: '5:00 PM',  tag: 'FRI',   urgent: false },
-  { id: 3, title: 'Interface Prototyping',    course: 'UX Design III',           time: '11:59 PM', tag: 'OCT 14', urgent: false },
-]
-
-const GRADES = [
-  { id: 1, grade: 'A',  title: 'Case Study 02',    course: 'UX Foundations • Gradon, L.', score: '98/100' },
-  { id: 2, grade: 'A-', title: 'Color Theory Quiz', course: 'Visual Arts • Miller, J.',    score: '92/100' },
-  { id: 3, grade: 'A+', title: 'Weekly Journal',    course: 'Humanities 101 • Smith, R.',  score: '10/10'  },
-]
-
-const EMAILS = [
-  { id: 1, initials: 'DL', bg: '#4a4947', sender: 'Design Team Lead', subject: 'Re: Feedback on Project Atelier', preview: "The latest mocks look promising, Alex. Let's discuss...", time: '2m ago' },
-  { id: 2, initials: 'D',  bg: '#ea4c89', sender: 'Dribbble',          subject: 'Trending shots for you',          preview: 'Take a look at these daily inspirations based on...',  time: '1h ago' },
-  { id: 3, initials: 'SC', bg: '#6366f1', sender: 'Sarah Connor',      subject: 'Weekend Plans?',                  preview: "Hey! Just checking if you're still down for that...",  time: '3h ago' },
-]
-
-const DISCORD_MESSAGES = [
-  { id: 1, user: 'Marcus_V', time: '12:45 PM', bot: false, color: '#4f98a3',
-    text: 'Yo @Alex, did you see the new Figma update? The multi-edit tool is absolutely insane.' },
-  { id: 2, user: 'Mojo-Bot',  time: '12:48 PM', bot: true,  color: '#4ccec0',
-    text: null, code: 'deck-core-v2',
-    prefix: 'A new repository was pushed to ', suffix: '. Check changelog for details.' },
-]
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function GradeBadge({ grade }) {
-  const colors = { 'A+': '#4ccec0', 'A': '#4f98a3', 'A-': '#6ba3aa', 'B+': '#6366f1' }
+function WeatherLogo() {
   return (
-    <span className="dp-grade-badge" style={{ background: colors[grade] || '#4a4947' }}>
-      {grade}
-    </span>
-  )
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="5" fill="#FDB813" />
+      <path
+        d="M12 2.5V5"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 19V21.5"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M2.5 12H5"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M19 12H21.5"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5.2 5.2L7 7"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M17 17L18.8 18.8"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M18.8 5.2L17 7"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7 17L5.2 18.8"
+        stroke="#FDB813"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
-function Avatar({ initials, bg, size = 36 }) {
+function SteamLogo() {
   return (
-    <span className="dp-avatar" style={{ background: bg, width: size, height: size, fontSize: size * 0.33 }}>
-      {initials}
-    </span>
-  )
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#1b2838" />
+      <circle cx="15.5" cy="8.5" r="2.3" stroke="white" strokeWidth="1.4" />
+      <circle cx="9" cy="14.8" r="1.8" fill="white" />
+      <path
+        d="M10.4 13.9L13.8 10.9"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7.2 13.8L5.2 13"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
-export default function DashboardPage({ onLogout }) {
-  const [chatMsg, setChatMsg]   = useState('')
-  const [isPlaying, setPlaying] = useState(true)
-  const [progress]              = useState(42)
-
+function AniListLogo() {
   return (
-    <div className="dp-root">
-      <Sidebar onLogout={onLogout} />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect width="24" height="24" rx="6" fill="#1f2a44" />
+      <path
+        d="M7 18L10.2 6H13.1L16.3 18H13.8L13.1 15.2H10.1L9.4 18H7ZM10.7 12.7H12.5L11.6 9L10.7 12.7Z"
+        fill="#7AA2FF"
+      />
+      <rect x="17.5" y="6" width="2.5" height="12" rx="1.25" fill="#00C2FF" />
+    </svg>
+  );
+}
 
-      <div className="dp-main">
-        {/* Top bar */}
-        <header className="dp-topbar">
-          <div className="dp-search">
-            <Icon.Search />
-            <input type="search" placeholder="Search Workspace…" aria-label="Search workspace" />
-          </div>
-          <div className="dp-topbar-right">
-            <button className="dp-icon-btn" aria-label="Notifications">
-              <Icon.Bell />
-              <span className="dp-notif-dot" aria-hidden="true" />
-            </button>
-            <button className="dp-icon-btn" aria-label="App grid"><Icon.Grid /></button>
-            <div className="dp-user">
-              <div className="dp-user-info">
-                <span className="dp-user-name">Alex Sterling</span>
-                <span className="dp-user-badge">PREMIUM ATELIER</span>
-              </div>
-              <Avatar initials="AS" bg="#4f98a3" size={34} />
+function createWidget(type, index) {
+  if (type === 'reddit') {
+    return {
+      id: crypto.randomUUID(),
+      type: 'reddit',
+      title: `Reddit ${index}`,
+      width: 320,
+    };
+  }
+
+  if (type === 'weather') {
+    return {
+      id: crypto.randomUUID(),
+      type: 'weather',
+      title: `Weather ${index}`,
+      width: 360,
+      city: 'Charlotte',
+      loading: false,
+      error: '',
+      data: null,
+    };
+  }
+
+  if (type === 'steam') {
+    return {
+      id: crypto.randomUUID(),
+      type: 'steam',
+      title: `Steam ${index}`,
+      width: 480,
+      query: '',
+      loading: false,
+      error: '',
+      items: [],
+    };
+  }
+
+  if (type === 'anilist') {
+    return {
+      id: crypto.randomUUID(),
+      type: 'anilist',
+      title: `AniList ${index}`,
+      width: 430,
+      mode: 'today',
+      loading: false,
+      error: '',
+      items: [],
+      seasonLabel: '',
+    };
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    type: 'empty',
+    title: `Widget ${index}`,
+    width: 320,
+  };
+}
+
+function formatForecastDay(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, { weekday: 'short' });
+  }
+
+function formatAiringTime(unixSeconds) {
+  if (!unixSeconds) return 'TBA';
+
+  return new Date(unixSeconds * 1000).toLocaleString([], {
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function WidgetColumn({
+  widget,
+  onResize,
+  onWeatherCityChange,
+  onWeatherRefresh,
+  onSteamQueryChange,
+  onSteamSearch,
+  onAniListModeChange,
+}) {
+  return (
+    <div
+      className={`deck-widget-column ${
+        widget.type === 'weather'
+          ? 'deck-widget-column--weather'
+          : widget.type === 'steam'
+          ? 'deck-widget-column--steam'
+          : widget.type === 'anilist'
+          ? 'deck-widget-column--anilist'
+          : ''
+      }`}
+      style={{ width: `${widget.width}px` }}
+    >
+      <div className="deck-widget-header">
+        <div>
+          <p className="deck-widget-eyebrow">
+            {widget.type === 'reddit'
+              ? 'REDDIT WIDGET'
+              : widget.type === 'weather'
+              ? 'WEATHER WIDGET'
+              : widget.type === 'steam'
+              ? 'STEAM WIDGET'
+              : widget.type === 'anilist'
+              ? 'ANILIST WIDGET'
+              : 'EMPTY WIDGET'}
+          </p>
+          <h3 className="deck-widget-title">{widget.title}</h3>
+        </div>
+
+        <div className="deck-widget-actions">
+          <button
+            type="button"
+            className="deck-widget-resize-btn"
+            onClick={() => onResize(widget.id, -40)}
+            aria-label={`Make ${widget.title} narrower`}
+          >
+            -
+          </button>
+          <button
+            type="button"
+            className="deck-widget-resize-btn"
+            onClick={() => onResize(widget.id, 40)}
+            aria-label={`Make ${widget.title} wider`}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div className="deck-widget-body">
+        {widget.type === 'weather' ? (
+          <div className="weather-widget">
+            <div className="weather-widget-controls">
+              <input
+                type="text"
+                className="weather-widget-input"
+                value={widget.city}
+                onChange={(e) => onWeatherCityChange(widget.id, e.target.value)}
+                placeholder="Enter city"
+              />
+              <button
+                type="button"
+                className="deck-primary-btn"
+                onClick={() => onWeatherRefresh(widget.id)}
+              >
+                Refresh
+              </button>
             </div>
-          </div>
-        </header>
 
-        <div className="dp-content">
-          {/* Title + KPIs */}
-          <div className="dp-title-row">
-            <div>
-              <h1 className="dp-page-title">Main Deck</h1>
-              <p className="dp-page-sub">Welcome back, Alex. Your creative flow is looking optimal today.</p>
-            </div>
-            <div className="dp-kpis">
-              <div className="dp-kpi">
-                <span className="dp-kpi-label">EFFICIENCY</span>
-                <span className="dp-kpi-value dp-kpi-value--teal">94%</span>
+            {widget.loading ? (
+              <div className="weather-widget-status">Loading weather...</div>
+            ) : widget.error ? (
+              <div className="weather-widget-status weather-widget-status--error">
+                {widget.error}
               </div>
-              <div className="dp-kpi">
-                <span className="dp-kpi-label">TASKS DONE</span>
-                <span className="dp-kpi-value">12</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 1 */}
-          <div className="dp-row dp-row--top">
-            {/* Canvas Workspace */}
-            <section className="dp-widget" aria-label="Canvas Workspace">
-              <div className="dp-widget-header">
-                <div className="dp-widget-title"><Icon.GradCap /><span>CANVAS WORKSPACE</span></div>
-                <span className="dp-overdue-badge">3 OVERDUE</span>
-              </div>
-              <div className="dp-canvas-body">
-                <div className="dp-canvas-col">
-                  <p className="dp-col-label">UPCOMING ASSIGNMENTS</p>
-                  <ul className="dp-assignment-list">
-                    {ASSIGNMENTS.map(a => (
-                      <li key={a.id} className="dp-assignment">
-                        <span className={`dp-assignment-bar${a.urgent ? ' dp-assignment-bar--urgent' : ''}`} />
-                        <div className="dp-assignment-body">
-                          <div className="dp-assignment-top">
-                            <span className="dp-assignment-title">{a.title}</span>
-                            <span className={`dp-assignment-tag${a.urgent ? ' dp-assignment-tag--today' : ''}`}>{a.tag}</span>
-                          </div>
-                          <span className="dp-assignment-meta">{a.course} • {a.time}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="dp-canvas-col">
-                  <p className="dp-col-label">RECENT GRADES</p>
-                  <ul className="dp-grade-list">
-                    {GRADES.map(g => (
-                      <li key={g.id} className="dp-grade-item">
-                        <GradeBadge grade={g.grade} />
-                        <div className="dp-grade-body">
-                          <span className="dp-grade-title">{g.title}</span>
-                          <span className="dp-grade-meta">{g.course}</span>
-                        </div>
-                        <span className="dp-grade-score">{g.score}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </section>
-
-            {/* Spotify */}
-            <section className="dp-widget dp-widget--spotify" aria-label="Now Playing">
-              <div className="dp-widget-header">
-                <div className="dp-widget-title"><Icon.NowPlaying /><span>NOW PLAYING</span></div>
-                <button className="dp-icon-btn" aria-label="More options"><Icon.MoreH /></button>
-              </div>
-              <div className="dp-album-art">
-                <div className="dp-album-img">
-                  <svg viewBox="0 0 200 160" width="100%" height="100%" aria-hidden="true">
-                    <defs>
-                      <radialGradient id="catBg" cx="50%" cy="40%" r="60%">
-                        <stop offset="0%" stopColor="#3d2b10"/>
-                        <stop offset="100%" stopColor="#111"/>
-                      </radialGradient>
-                    </defs>
-                    <rect width="200" height="160" fill="url(#catBg)"/>
-                    <ellipse cx="100" cy="95" rx="42" ry="38" fill="#c47a28" opacity="0.85"/>
-                    <ellipse cx="100" cy="80" rx="32" ry="28" fill="#d4892f" opacity="0.9"/>
-                    <polygon points="74,58 82,38 90,58" fill="#c47a28"/>
-                    <polygon points="110,58 118,38 126,58" fill="#c47a28"/>
-                    <ellipse cx="90" cy="78" rx="7" ry="9" fill="#1a0f00"/>
-                    <ellipse cx="110" cy="78" rx="7" ry="9" fill="#1a0f00"/>
-                    <ellipse cx="90" cy="78" rx="3" ry="5" fill="#f5c842"/>
-                    <ellipse cx="110" cy="78" rx="3" ry="5" fill="#f5c842"/>
-                    <ellipse cx="100" cy="88" rx="5" ry="3" fill="#d4892f"/>
-                    <line x1="78" y1="90" x2="58" y2="87" stroke="#7a4a10" strokeWidth="1.2"/>
-                    <line x1="78" y1="93" x2="58" y2="93" stroke="#7a4a10" strokeWidth="1.2"/>
-                    <line x1="122" y1="90" x2="142" y2="87" stroke="#7a4a10" strokeWidth="1.2"/>
-                    <line x1="122" y1="93" x2="142" y2="93" stroke="#7a4a10" strokeWidth="1.2"/>
-                    <rect x="148" y="112" width="38" height="38" rx="10" fill="#4f98a3"/>
-                    <g stroke="white" strokeWidth="2.5" strokeLinecap="round">
-                      <line x1="157" y1="131" x2="157" y2="131"/>
-                      <line x1="162" y1="125" x2="162" y2="137"/>
-                      <line x1="167" y1="121" x2="167" y2="141"/>
-                      <line x1="172" y1="125" x2="172" y2="137"/>
-                      <line x1="177" y1="131" x2="177" y2="131"/>
-                    </g>
-                  </svg>
-                </div>
-              </div>
-              <div className="dp-track-info">
-                <p className="dp-track-title">Midnight City Vibes</p>
-                <p className="dp-track-artist">Lofi Girl • Chill Study Beats</p>
-              </div>
-              <div className="dp-progress-wrapper">
-                <div className="dp-progress-bar">
-                  <div className="dp-progress-fill" style={{ width: `${progress}%` }} />
-                </div>
-              </div>
-              <div className="dp-controls">
-                <button className="dp-ctrl-btn" aria-label="Shuffle"><Icon.Shuffle /></button>
-                <button className="dp-ctrl-btn" aria-label="Previous"><Icon.SkipBack /></button>
-                <button className="dp-ctrl-btn dp-ctrl-btn--primary"
-                        onClick={() => setPlaying(p => !p)}
-                        aria-label={isPlaying ? 'Pause' : 'Play'}>
-                  {isPlaying ? <Icon.Pause /> : <Icon.Play />}
-                </button>
-                <button className="dp-ctrl-btn" aria-label="Next"><Icon.SkipFwd /></button>
-                <button className="dp-ctrl-btn" aria-label="Repeat"><Icon.Repeat /></button>
-              </div>
-            </section>
-          </div>
-
-          {/* Row 2 */}
-          <div className="dp-row dp-row--bottom">
-            {/* Gmail */}
-            <section className="dp-widget" aria-label="Gmail Inbox">
-              <div className="dp-widget-header">
-                <div className="dp-widget-title"><Icon.Mail /><span>GMAIL INBOX</span></div>
-                <button className="dp-view-all-btn">VIEW ALL</button>
-              </div>
-              <ul className="dp-email-list">
-                {EMAILS.map(e => (
-                  <li key={e.id} className="dp-email-item">
-                    <Avatar initials={e.initials} bg={e.bg} size={38} />
-                    <div className="dp-email-body">
-                      <div className="dp-email-top">
-                        <span className="dp-email-sender">{e.sender}</span>
-                        <span className="dp-email-time">{e.time}</span>
-                      </div>
-                      <span className="dp-email-subject">{e.subject}</span>
-                      <span className="dp-email-preview">{e.preview}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            {/* Discord */}
-            <section className="dp-widget dp-widget--discord" aria-label="Discord - The Creative Den">
-              <div className="dp-widget-header">
-                <div className="dp-widget-title">
-                  <Icon.Discord />
+            ) : widget.data ? (
+              <div className="weather-widget-card">
+                <div className="weather-widget-top">
                   <div>
-                    <div>THE CREATIVE DEN</div>
-                    <span className="dp-discord-channel">#design-critique</span>
+                    <p className="weather-widget-location">
+                      {widget.data.city}
+                      {widget.data.state ? `, ${widget.data.state}` : ''}
+                    </p>
+                    <p className="weather-widget-country">{widget.data.country}</p>
+                  </div>
+                  <div className="weather-widget-temp">
+                    {Math.round(widget.data.temperature)}°
                   </div>
                 </div>
-                <div className="dp-discord-avatars">
-                  {['#4f98a3','#ec4899','#f59e0b'].map((c,i) => (
-                    <span key={i} className="dp-dc-avatar" style={{ background: c, marginLeft: i > 0 ? -6 : 0 }}>
-                      {['M','S','K'][i]}
+
+                <p className="weather-widget-condition">{widget.data.condition}</p>
+
+                <div className="weather-widget-stats">
+                  <div className="weather-stat">
+                    <span className="weather-stat-label">High</span>
+                    <span className="weather-stat-value">
+                      {Math.round(widget.data.high)}°
                     </span>
-                  ))}
-                  <span className="dp-dc-count">+12</span>
+                  </div>
+                  <div className="weather-stat">
+                    <span className="weather-stat-label">Low</span>
+                    <span className="weather-stat-value">
+                      {Math.round(widget.data.low)}°
+                    </span>
+                  </div>
+                  <div className="weather-stat">
+                    <span className="weather-stat-label">Wind</span>
+                    <span className="weather-stat-value">
+                      {Math.round(widget.data.windSpeed)} mph
+                    </span>
+                  </div>
+                </div>
+
+                <div className="weather-forecast">
+                  <p className="weather-forecast-title">Next few days</p>
+
+                  <div className="weather-forecast-list">
+                    {widget.data.forecast?.slice(1).map((day) => (
+                      <div key={day.date} className="weather-forecast-row">
+                        <span className="weather-forecast-day">
+                          {formatForecastDay(day.date)}
+                        </span>
+                        <span className="weather-forecast-condition">
+                          {day.condition}
+                        </span>
+                        <span className="weather-forecast-temps">
+                          {Math.round(day.high)}° / {Math.round(day.low)}°
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div className="dp-messages">
-                {DISCORD_MESSAGES.map(m => (
-                  <div key={m.id} className="dp-message">
-                    <span className="dp-msg-avatar" style={{ background: m.color }}>{m.user[0]}</span>
-                    <div className="dp-msg-body">
-                      <div className="dp-msg-header">
-                        <span className="dp-msg-user" style={{ color: m.color }}>{m.user}</span>
-                        {m.bot && <span className="dp-bot-badge">BOT</span>}
-                        <span className="dp-msg-time">{m.time}</span>
-                      </div>
-                      <p className="dp-msg-text">
-                        {m.text || <>
-                          {m.prefix}
-                          <code className="dp-code">{m.code}</code>
-                          {m.suffix}
-                        </>}
+            ) : (
+              <div className="weather-widget-status">No weather loaded yet.</div>
+            )}
+          </div>
+        ) : widget.type === 'steam' ? (
+          <div className="steam-widget">
+            <div className="steam-widget-controls">
+              <input
+                type="text"
+                className="steam-widget-input"
+                value={widget.query}
+                onChange={(e) => onSteamQueryChange(widget.id, e.target.value)}
+                placeholder="Search featured games..."
+              />
+              <button
+                type="button"
+                className="deck-primary-btn"
+                onClick={() => onSteamSearch(widget.id)}
+              >
+                Search
+              </button>
+            </div>
+
+            {widget.loading ? (
+              <div className="steam-widget-status">Loading games...</div>
+            ) : widget.error ? (
+              <div className="steam-widget-status steam-widget-status--error">
+                {widget.error}
+              </div>
+            ) : (
+              <div className="steam-game-list">
+                {widget.items?.map((game) => (
+                  <a
+                    key={game.appid}
+                    href={game.storeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="steam-game-card"
+                  >
+                    <img
+                      src={game.headerImage || game.capsuleImage}
+                      alt={game.name}
+                      className="steam-game-image"
+                    />
+                    <div className="steam-game-meta">
+                      <p className="steam-game-title">{game.name}</p>
+                      <p className="steam-game-description">
+                        {game.shortDescription || 'Open in Steam store'}
+                      </p>
+                      <p className="steam-game-price">
+                        {game.price || 'View on Steam'}
                       </p>
                     </div>
-                  </div>
+                  </a>
                 ))}
               </div>
-              <form className="dp-chat-input" onSubmit={e => { e.preventDefault(); setChatMsg('') }}>
-                <button type="button" className="dp-icon-btn" aria-label="Attach"><Icon.Plus /></button>
-                <input type="text" placeholder="Message #design-critique"
-                       value={chatMsg} onChange={e => setChatMsg(e.target.value)}
-                       aria-label="Type a message" />
-                <button type="button" className="dp-icon-btn" aria-label="Emoji"><Icon.Emoji /></button>
-              </form>
-            </section>
+            )}
+          </div>
+        ) : widget.type === 'anilist' ? (
+          <div className="anilist-widget">
+            <div className="anilist-widget-controls">
+              <button
+                type="button"
+                className={`anilist-mode-btn ${widget.mode === 'today' ? 'anilist-mode-btn--active' : ''}`}
+                onClick={() => onAniListModeChange(widget.id, 'today')}
+              >
+                Airs Today
+              </button>
+              <button
+                type="button"
+                className={`anilist-mode-btn ${widget.mode === 'week' ? 'anilist-mode-btn--active' : ''}`}
+                onClick={() => onAniListModeChange(widget.id, 'week')}
+              >
+                This Week
+              </button>
+              <button
+                type="button"
+                className={`anilist-mode-btn ${widget.mode === 'season' ? 'anilist-mode-btn--active' : ''}`}
+                onClick={() => onAniListModeChange(widget.id, 'season')}
+              >
+                Upcoming Season
+              </button>
+            </div>
+
+            {widget.mode === 'season' && widget.seasonLabel ? (
+              <p className="anilist-season-label">{widget.seasonLabel}</p>
+            ) : null}
+
+            {widget.loading ? (
+              <div className="anilist-widget-status">Loading anime...</div>
+            ) : widget.error ? (
+              <div className="anilist-widget-status anilist-widget-status--error">
+                {widget.error}
+              </div>
+            ) : (
+              <div className="anilist-list">
+                {widget.items?.map((anime) => (
+                  <a
+                    key={`${anime.id}-${anime.episode ?? 'na'}`}
+                    href={anime.siteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="anilist-card"
+                  >
+                    <img
+                      src={anime.coverImage}
+                      alt={anime.title}
+                      className="anilist-card-image"
+                    />
+                    <div className="anilist-card-meta">
+                      <p className="anilist-card-title">{anime.title}</p>
+                      <p className="anilist-card-episode">
+                        {anime.episode ? `Episode ${anime.episode}` : 'Upcoming'}
+                      </p>
+                      <p className="anilist-card-time">
+                        {anime.airingAt ? formatAiringTime(anime.airingAt) : `${anime.season} ${anime.seasonYear}`}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : widget.type === 'reddit' ? (
+          <div className="deck-widget-placeholder reddit-widget-placeholder">
+            <div className="reddit-widget-badge">
+              <RedditLogo />
+            </div>
+            <p className="deck-widget-placeholder-title">Reddit connected later</p>
+            <p className="deck-widget-placeholder-text">
+              This is a starter Reddit column. Later this can support subreddit
+              feeds, saved posts, notifications, messages, or custom searches.
+            </p>
+          </div>
+        ) : (
+          <div className="deck-widget-placeholder">
+            <div className="deck-widget-plus">+</div>
+            <p className="deck-widget-placeholder-title">Add content later</p>
+            <p className="deck-widget-placeholder-text">
+              This column is ready for a future widget like Weather, Reddit,
+              Gmail, Spotify, YouTube, Steam, or News.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  if (!isOpen) return null;
+
+  const services = [
+  {
+    id: 'reddit',
+    name: 'Reddit',
+    description: 'Feeds, subreddits, saved posts, notifications, and more later.',
+  },
+  {
+    id: 'weather',
+    name: 'Weather',
+    description: 'Current conditions and today’s forecast for a city.',
+  },
+  {
+    id: 'steam',
+    name: 'Steam',
+    description: 'Featured games, store cards, and quick search.',
+  },
+  {
+    id: 'anilist',
+    name: 'AniList',
+    description: 'Anime airing today, this week, and upcoming seasonal shows.',
+  },
+];
+
+  const filteredServices = services.filter((service) =>
+    service.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="widget-modal-overlay" onClick={onClose}>
+      <div
+        className="widget-modal"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-widget-title"
+      >
+        <div className="widget-modal-header">
+          <div>
+            <p className="widget-modal-eyebrow">ADD WIDGET</p>
+            <h2 id="add-widget-title" className="widget-modal-title">
+              Choose a service
+            </h2>
+            <p className="widget-modal-subtitle">
+              Start with one available service for now.
+            </p>
           </div>
 
+          <button
+            type="button"
+            className="widget-modal-close"
+            onClick={onClose}
+            aria-label="Close add widget modal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="widget-modal-search-wrap">
+          <input
+            type="text"
+            className="widget-modal-search"
+            placeholder="Search services..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
+
+        <div className="widget-service-list">
+          {filteredServices.length === 0 ? (
+            <div className="widget-service-empty">
+              No services match that search yet.
+            </div>
+          ) : (
+            filteredServices.map((service) => (
+              <button
+                key={service.id}
+                type="button"
+                className="widget-service-item"
+                onClick={() => onSelectWidgetType(service.id)}
+              >
+                <div className="widget-service-icon">
+                  {service.id === 'reddit' && <RedditLogo />}
+                  {service.id === 'weather' && <WeatherLogo />}
+                  {service.id === 'steam' && <SteamLogo />}
+                  {service.id === 'anilist' && <AniListLogo />}
+                </div>
+
+                <div className="widget-service-content">
+                  <span className="widget-service-name">{service.name}</span>
+                  <span className="widget-service-description">
+                    {service.description}
+                  </span>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
     </div>
-  )
+  );
+}
+
+function DeckArea({
+  widgets,
+  onOpenWidgetPicker,
+  onResizeWidget,
+  onWeatherCityChange,
+  onWeatherRefresh,
+  onSteamQueryChange,
+  onSteamSearch,
+  onAniListModeChange,
+}) {
+  return (
+    <section className="deck-panel">
+      <div className="deck-panel-header">
+        <div>
+          <p className="deck-panel-eyebrow">WORKSPACE</p>
+          <h2 className="deck-panel-title">Deck 1</h2>
+          <p className="deck-panel-subtitle">
+            Build your workspace by adding widget columns.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="deck-primary-btn"
+          onClick={onOpenWidgetPicker}
+        >
+          + Add Widget
+        </button>
+      </div>
+
+      <div className="deck-panel-body">
+        {widgets.length === 0 ? (
+          <div className="deck-empty-state">
+            <div className="deck-empty-icon">+</div>
+            <h3 className="deck-empty-title">Your first deck is empty</h3>
+            <p className="deck-empty-text">
+              Start by adding a widget column. For now, we’ll support Reddit first.
+            </p>
+            <button
+              type="button"
+              className="deck-primary-btn"
+              onClick={onOpenWidgetPicker}
+            >
+              Add your first widget
+            </button>
+          </div>
+        ) : (
+          <div className="deck-columns">
+            {widgets.map((widget) => (
+              <WidgetColumn
+                key={widget.id}
+                widget={widget}
+                onResize={onResizeWidget}
+                onWeatherCityChange={onWeatherCityChange}
+                onWeatherRefresh={onWeatherRefresh}
+                onSteamQueryChange={onSteamQueryChange}
+                onSteamSearch={onSteamSearch}
+                onAniListModeChange={onAniListModeChange}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ConnectionCard({ label, title, description, buttonText }) {
+  return (
+    <section className="deck-connection-card">
+      <p className="deck-connection-label">{label}</p>
+      <h3 className="deck-connection-title">{title}</h3>
+      <p className="deck-connection-text">{description}</p>
+      <button type="button" className="deck-secondary-btn">
+        {buttonText}
+      </button>
+    </section>
+  );
+}
+
+export default function DashboardPage({ onLogout }) {
+  const [widgets, setWidgets] = useState([]);
+  const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
+
+  const nextWidgetNumber = useMemo(() => widgets.length + 1, [widgets.length]);
+
+  async function fetchWeatherForWidget(widgetId, city) {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, loading: true, error: '' }
+          : widget
+      )
+    );
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/weather?city=${encodeURIComponent(city)}`
+      );
+
+      const text = await response.text();
+      console.log(text);
+      const data = JSON.parse(text);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch weather.');
+      }
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: '',
+                data,
+              }
+            : widget
+        )
+      );
+    } catch (error) {
+      console.error('Weather fetch failed:', error);
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: error.message || 'Unable to load weather.',
+              }
+            : widget
+        )
+      );
+    }
+  }
+
+  function handleWeatherCityChange(widgetId, value) {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, city: value }
+          : widget
+      )
+    );
+  }
+
+  function handleWeatherRefresh(widgetId) {
+    const widget = widgets.find((w) => w.id === widgetId);
+    if (!widget || !widget.city.trim()) return;
+
+    fetchWeatherForWidget(widgetId, widget.city.trim());
+  }
+
+  function openWidgetPicker() {
+    setIsWidgetModalOpen(true);
+  }
+
+  function closeWidgetPicker() {
+    setIsWidgetModalOpen(false);
+  }
+
+  function handleAddWidgetByType(type) {
+    const newWidget = createWidget(type, widgets.length + 1);
+
+    setWidgets((prev) => [...prev, newWidget]);
+    closeWidgetPicker();
+
+    if (type === 'weather') {
+      setTimeout(() => {
+        fetchWeatherForWidget(newWidget.id, newWidget.city);
+      }, 0);
+    }
+
+    if (type === 'steam') {
+      setTimeout(() => {
+        fetchSteamForWidget(newWidget.id, '');
+      }, 0);
+    }
+
+    if (type === 'anilist') {
+      setTimeout(() => {
+        fetchAniListForWidget(newWidget.id, 'today');
+      }, 0);
+    }
+
+  }
+
+  function handleResizeWidget(widgetId, delta) {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? {
+              ...widget,
+              width: Math.max(260, Math.min(700, widget.width + delta)),
+            }
+          : widget
+      )
+    );
+  }
+
+  async function fetchSteamForWidget(widgetId, query = '') {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, loading: true, error: '' }
+          : widget
+      )
+    );
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/steam/featured?q=${encodeURIComponent(query)}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch Steam games.');
+      }
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: '',
+                items: data.items || [],
+              }
+            : widget
+        )
+      );
+    } catch (error) {
+      console.error('Steam fetch failed:', error);
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: error.message || 'Unable to load Steam games.',
+              }
+            : widget
+        )
+      );
+    }
+  }
+
+  function handleSteamQueryChange(widgetId, value) {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, query: value }
+          : widget
+      )
+    );
+  }
+
+  function handleSteamSearch(widgetId) {
+    const widget = widgets.find((w) => w.id === widgetId);
+    if (!widget) return;
+
+    fetchSteamForWidget(widgetId, widget.query.trim());
+  }
+
+  // Anilist functions
+  async function fetchAniListForWidget(widgetId, mode = 'today') {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, loading: true, error: '', mode }
+          : widget
+      )
+    );
+
+    try {
+      const endpoint =
+        mode === 'today'
+          ? 'today'
+          : mode === 'week'
+          ? 'week'
+          : 'season';
+
+      const response = await fetch(`http://localhost:5000/api/anilist/${endpoint}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch AniList data.');
+      }
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: '',
+                items: data.items || [],
+                seasonLabel:
+                  mode === 'season' && data.season && data.year
+                    ? `${data.season} ${data.year}`
+                    : '',
+                mode,
+              }
+            : widget
+        )
+      );
+    } catch (error) {
+      console.error('AniList fetch failed:', error);
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: error.message || 'Unable to load AniList data.',
+              }
+            : widget
+        )
+      );
+    }
+  }
+
+  function handleAniListModeChange(widgetId, mode) {
+    fetchAniListForWidget(widgetId, mode);
+  }
+
+  return (
+    <div className="dashboard-shell">
+      <Sidebar onAddWidget={openWidgetPicker} onLogout={onLogout} />
+
+      <main className="dashboard-main">
+        <header className="dashboard-topbar">
+          <div>
+            <p className="dashboard-kicker">MAIN DECK</p>
+            <h1 className="dashboard-title">Welcome to Canvas Deck</h1>
+            <p className="dashboard-subtitle">
+              New users start empty. Build the workspace you want.
+            </p>
+          </div>
+
+          <div className="dashboard-topbar-actions">
+            <span className="dashboard-widget-count">
+              {widgets.length} widget{widgets.length === 1 ? '' : 's'}
+            </span>
+
+            {onLogout && (
+              <button
+                type="button"
+                className="deck-secondary-btn"
+                onClick={onLogout}
+              >
+                Log out
+              </button>
+            )}
+          </div>
+        </header>
+
+        <DeckArea
+          widgets={widgets}
+          onOpenWidgetPicker={openWidgetPicker}
+          onResizeWidget={handleResizeWidget}
+          onWeatherCityChange={handleWeatherCityChange}
+          onWeatherRefresh={handleWeatherRefresh}
+          onSteamQueryChange={handleSteamQueryChange}
+          onSteamSearch={handleSteamSearch}
+          onAniListModeChange={handleAniListModeChange}
+        />
+
+        <section className="dashboard-connections-grid">
+          <ConnectionCard
+            label="GMAIL"
+            title="Connect Gmail"
+            description="Link your Gmail account to show inbox widgets inside your deck."
+            buttonText="Connect Gmail"
+          />
+
+          <ConnectionCard
+            label="SPOTIFY"
+            title="Connect Spotify"
+            description="Sign in with Spotify to add player, feed, or playlist widgets later."
+            buttonText="Connect Spotify"
+          />
+
+          <ConnectionCard
+            label="MORE SERVICES"
+            title="More widgets coming"
+            description="Instagram, Twitter/X, notifications, DMs, and more can plug into this same deck model."
+            buttonText="Coming Soon"
+          />
+        </section>
+      </main>
+
+      <AddWidgetModal
+        isOpen={isWidgetModalOpen}
+        onClose={closeWidgetPicker}
+        onSelectWidgetType={handleAddWidgetByType}
+      />
+    </div>
+  );
 }

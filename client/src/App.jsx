@@ -1,6 +1,9 @@
 import { useState } from 'react'
+import { useEffect } from 'react'
+import { supabase } from './supabaseClient'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
 import WorkboardsPage from './pages/WorkboardsPage'
 import './App.css'
@@ -32,6 +35,34 @@ function App() {
   const handleLogin  = () => setIsAuthenticated(true)
   const handleLogout = () => setIsAuthenticated(false)
 
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session) {
+          setIsAuthenticated(true)
+        } else {
+          setIsAuthenticated(false)
+        }
+      }
+    )
+
+    return () => {
+      listener.subscription.unsubscribe()
+    }
+  }, [])
+  
+  useEffect(() => {
+  const initSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (session) {
+      setIsAuthenticated(true)
+    }
+  }
+
+  initSession()
+}, [])
+
   return (
     <Router>
       <Routes>
@@ -53,6 +84,16 @@ function App() {
             isAuthenticated
               ? <Navigate to="/dashboard" replace />
               : <LoginPage onLogin={handleLogin} />
+          }
+        />
+
+        {/* Signup route */}
+        <Route
+          path="/signup"
+          element={
+            isAuthenticated
+              ? <Navigate to="/dashboard" replace />
+              : <SignupPage onSignup={handleLogin} />
           }
         />
 

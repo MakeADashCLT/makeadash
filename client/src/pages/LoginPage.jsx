@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import './LoginPage.css'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../supabaseClient'
 
 /**
  * LoginPage
@@ -81,26 +83,55 @@ function AvatarStack() {
 }
 
 export default function LoginPage({ onLogin }) {
+  const navigate = useNavigate()
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
   const [showPassword, setShowPass] = useState(false)
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState('')
 
-  const handleOAuth = (provider) => {
-    setLoading(true)
-    setError('')
-    // TODO: redirect to real OAuth endpoint — /auth/canvas or /auth/google
-    setTimeout(() => { setLoading(false); onLogin() }, 800)
-  }
+  const handleOAuth = async (provider) => {
+  setLoading(true)
+  setError('')
 
-  const handleEmailLogin = (e) => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: provider,
+    options: {
+      redirectTo: window.location.origin
+    }
+  })
+
+  if (error) {
+    setError(error.message)
+    setLoading(false)
+  }
+}
+
+  const handleEmailLogin = async (e) => {
     e.preventDefault()
-    if (!email || !password) { setError('Please fill in all fields.'); return }
+
+    if (!email || !password) {
+      setError('Please fill in all fields.')
+      return
+    }
+
     setLoading(true)
     setError('')
-    // TODO: POST /api/auth/login  { email, password }
-    setTimeout(() => { setLoading(false); onLogin() }, 800)
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    setLoading(false)
+
+    if (error) {
+      setError(error.message)
+      return
+    }
+
+    // success → user is now logged in via Supabase session
+    onLogin(data.user)
   }
 
   return (
@@ -184,8 +215,15 @@ export default function LoginPage({ onLogin }) {
 
           <p className="lp-signup-prompt">
             New to the atelier?{' '}
-            <button type="button" className="lp-link">Create an account</button>
+            <button
+              type="button"
+              className="lp-link"
+              onClick={() => navigate('/signup')}   // ✅ THIS IS THE FIX
+            >
+          Create an account
+            </button>
           </p>
+
         </div>
       </div>
 
@@ -198,5 +236,6 @@ export default function LoginPage({ onLogin }) {
         <span className="lp-footer-version">V2.4.0</span>
       </footer>
     </div>
+    
   )
 }

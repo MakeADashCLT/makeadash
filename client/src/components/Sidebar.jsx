@@ -113,8 +113,8 @@ const EXTERNAL_LINKS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function Sidebar({ onLogout }) {
-  return (
+export default function Sidebar({ onAddWidget, onLogout }) {
+  return ( 
     <aside className="sidebar" aria-label="Main navigation">
 
       {/* Logo */}
@@ -145,8 +145,9 @@ export default function Sidebar({ onLogout }) {
       {/* Add Widget */}
       <button
         className="sidebar-add-widget"
-        onClick={() => { /* TODO: open widget picker modal */ }}
+        onClick={onAddWidget}
         aria-label="Add widget"
+        type="button"
       >
         <IconPlus />
         <span>Add Widget</span>
