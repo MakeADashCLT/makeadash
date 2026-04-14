@@ -76,26 +76,26 @@ function generateId() {
 
 function createWidget(type, index) {
   if (type === 'reddit') return {
-    id: generateId(), type: 'reddit', title: `Reddit ${index}`, width: 320,
+    id: generateId(), type: 'reddit', title: `Reddit`, width: 320,
   };
   if (type === 'weather') return {
-    id: generateId(), type: 'weather', title: `Weather ${index}`,
+    id: generateId(), type: 'weather', title: `Weather`,
     width: 360, city: 'Charlotte', loading: false, error: '', data: null,
   };
   if (type === 'steam') return {
-    id: generateId(), type: 'steam', title: `Steam ${index}`,
+    id: generateId(), type: 'steam', title: `Steam`,
     width: 480, query: '', loading: false, error: '', items: [],
   };
   if (type === 'anilist') return {
-    id: generateId(), type: 'anilist', title: `AniList ${index}`,
+    id: generateId(), type: 'anilist', title: `AniList`,
     width: 430, mode: 'today', loading: false, error: '', items: [], seasonLabel: '',
   };
   if (type === 'github') return {
-    id: generateId(), type: 'github', title: `GitHub ${index}`,
+    id: generateId(), type: 'github', title: `GitHub`,
     width: 360, username: '', loading: false, error: '', data: null,
   };
   return {
-    id: generateId(), type: 'empty', title: `Widget ${index}`, width: 320,
+    id: generateId(), type: 'empty', title: `Widget`, width: 320,
   };
 }
 
