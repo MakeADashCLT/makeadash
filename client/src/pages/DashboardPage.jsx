@@ -99,6 +99,28 @@ function WeatherLogo() {
   );
 }
 
+function SteamLogo() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#1b2838" />
+      <circle cx="15.5" cy="8.5" r="2.3" stroke="white" strokeWidth="1.4" />
+      <circle cx="9" cy="14.8" r="1.8" fill="white" />
+      <path
+        d="M10.4 13.9L13.8 10.9"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7.2 13.8L5.2 13"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function createWidget(type, index) {
   if (type === 'reddit') {
     return {
@@ -122,6 +144,19 @@ function createWidget(type, index) {
     };
   }
 
+  if (type === 'steam') {
+    return {
+      id: crypto.randomUUID(),
+      type: 'steam',
+      title: `Steam ${index}`,
+      width: 480,
+      query: '',
+      loading: false,
+      error: '',
+      items: [],
+    };
+  }
+
   return {
     id: crypto.randomUUID(),
     type: 'empty',
@@ -140,11 +175,17 @@ function WidgetColumn({
   onResize,
   onWeatherCityChange,
   onWeatherRefresh,
+  onSteamQueryChange,
+  onSteamSearch,
 }) {
   return (
     <div
       className={`deck-widget-column ${
-        widget.type === 'weather' ? 'deck-widget-column--weather' : ''
+        widget.type === 'weather'
+          ? 'deck-widget-column--weather'
+          : widget.type === 'steam'
+          ? 'deck-widget-column--steam'
+          : ''
       }`}
       style={{ width: `${widget.width}px` }}
     >
@@ -155,6 +196,8 @@ function WidgetColumn({
               ? 'REDDIT WIDGET'
               : widget.type === 'weather'
               ? 'WEATHER WIDGET'
+              : widget.type === 'steam'
+              ? 'STEAM WIDGET'
               : 'EMPTY WIDGET'}
           </p>
           <h3 className="deck-widget-title">{widget.title}</h3>
@@ -244,29 +287,82 @@ function WidgetColumn({
                   </div>
                 </div>
 
-                  <div className="weather-forecast">
-                    <p className="weather-forecast-title">Next few days</p>
+                <div className="weather-forecast">
+                  <p className="weather-forecast-title">Next few days</p>
 
-                    <div className="weather-forecast-list">
-                      {widget.data.forecast?.slice(1).map((day) => (
-                        <div key={day.date} className="weather-forecast-row">
-                          <span className="weather-forecast-day">
-                            {formatForecastDay(day.date)}
-                          </span>
-                          <span className="weather-forecast-condition">
-                            {day.condition}
-                          </span>
-                          <span className="weather-forecast-temps">
-                            {Math.round(day.high)}° / {Math.round(day.low)}°
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="weather-forecast-list">
+                    {widget.data.forecast?.slice(1).map((day) => (
+                      <div key={day.date} className="weather-forecast-row">
+                        <span className="weather-forecast-day">
+                          {formatForecastDay(day.date)}
+                        </span>
+                        <span className="weather-forecast-condition">
+                          {day.condition}
+                        </span>
+                        <span className="weather-forecast-temps">
+                          {Math.round(day.high)}° / {Math.round(day.low)}°
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  
+                </div>
               </div>
             ) : (
               <div className="weather-widget-status">No weather loaded yet.</div>
+            )}
+          </div>
+        ) : widget.type === 'steam' ? (
+          <div className="steam-widget">
+            <div className="steam-widget-controls">
+              <input
+                type="text"
+                className="steam-widget-input"
+                value={widget.query}
+                onChange={(e) => onSteamQueryChange(widget.id, e.target.value)}
+                placeholder="Search featured games..."
+              />
+              <button
+                type="button"
+                className="deck-primary-btn"
+                onClick={() => onSteamSearch(widget.id)}
+              >
+                Search
+              </button>
+            </div>
+
+            {widget.loading ? (
+              <div className="steam-widget-status">Loading games...</div>
+            ) : widget.error ? (
+              <div className="steam-widget-status steam-widget-status--error">
+                {widget.error}
+              </div>
+            ) : (
+              <div className="steam-game-list">
+                {widget.items?.map((game) => (
+                  <a
+                    key={game.appid}
+                    href={game.storeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="steam-game-card"
+                  >
+                    <img
+                      src={game.headerImage || game.capsuleImage}
+                      alt={game.name}
+                      className="steam-game-image"
+                    />
+                    <div className="steam-game-meta">
+                      <p className="steam-game-title">{game.name}</p>
+                      <p className="steam-game-description">
+                        {game.shortDescription || 'Open in Steam store'}
+                      </p>
+                      <p className="steam-game-price">
+                        {game.price || 'View on Steam'}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
             )}
           </div>
         ) : widget.type === 'reddit' ? (
@@ -286,7 +382,7 @@ function WidgetColumn({
             <p className="deck-widget-placeholder-title">Add content later</p>
             <p className="deck-widget-placeholder-text">
               This column is ready for a future widget like Weather, Reddit,
-              Gmail, Spotify, YouTube, or News.
+              Gmail, Spotify, YouTube, Steam, or News.
             </p>
           </div>
         )}
@@ -311,6 +407,11 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
     name: 'Weather',
     description: 'Current conditions and today’s forecast for a city.',
   },
+  {
+  id: 'steam',
+  name: 'Steam',
+  description: 'Featured games, store cards, and quick search.',
+},
 ];
 
   const filteredServices = services.filter((service) =>
@@ -373,6 +474,7 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
                 <div className="widget-service-icon">
                   {service.id === 'reddit' && <RedditLogo />}
                   {service.id === 'weather' && <WeatherLogo />}
+                  {service.id === 'steam' && <SteamLogo />}
                 </div>
 
                 <div className="widget-service-content">
@@ -396,6 +498,8 @@ function DeckArea({
   onResizeWidget,
   onWeatherCityChange,
   onWeatherRefresh,
+  onSteamQueryChange,
+  onSteamSearch,
 }) {
   return (
     <section className="deck-panel">
@@ -442,6 +546,8 @@ function DeckArea({
                 onResize={onResizeWidget}
                 onWeatherCityChange={onWeatherCityChange}
                 onWeatherRefresh={onWeatherRefresh}
+                onSteamQueryChange={onSteamQueryChange}
+                onSteamSearch={onSteamSearch}
               />
             ))}
           </div>
@@ -557,6 +663,12 @@ export default function DashboardPage({ onLogout }) {
         fetchWeatherForWidget(newWidget.id, newWidget.city);
       }, 0);
     }
+
+    if (type === 'steam') {
+      setTimeout(() => {
+        fetchSteamForWidget(newWidget.id, '');
+      }, 0);
+    }
   }
 
   function handleResizeWidget(widgetId, delta) {
@@ -570,6 +682,72 @@ export default function DashboardPage({ onLogout }) {
           : widget
       )
     );
+  }
+
+  async function fetchSteamForWidget(widgetId, query = '') {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, loading: true, error: '' }
+          : widget
+      )
+    );
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/steam/featured?q=${encodeURIComponent(query)}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch Steam games.');
+      }
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: '',
+                items: data.items || [],
+              }
+            : widget
+        )
+      );
+    } catch (error) {
+      console.error('Steam fetch failed:', error);
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: error.message || 'Unable to load Steam games.',
+              }
+            : widget
+        )
+      );
+    }
+  }
+
+  function handleSteamQueryChange(widgetId, value) {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, query: value }
+          : widget
+      )
+    );
+  }
+
+  function handleSteamSearch(widgetId) {
+    const widget = widgets.find((w) => w.id === widgetId);
+    if (!widget) return;
+
+    fetchSteamForWidget(widgetId, widget.query.trim());
   }
 
   return (
@@ -609,6 +787,8 @@ export default function DashboardPage({ onLogout }) {
           onResizeWidget={handleResizeWidget}
           onWeatherCityChange={handleWeatherCityChange}
           onWeatherRefresh={handleWeatherRefresh}
+          onSteamQueryChange={handleSteamQueryChange}
+          onSteamSearch={handleSteamSearch}
         />
 
         <section className="dashboard-connections-grid">
