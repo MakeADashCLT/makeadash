@@ -121,6 +121,19 @@ function SteamLogo() {
   );
 }
 
+function AniListLogo() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect width="24" height="24" rx="6" fill="#1f2a44" />
+      <path
+        d="M7 18L10.2 6H13.1L16.3 18H13.8L13.1 15.2H10.1L9.4 18H7ZM10.7 12.7H12.5L11.6 9L10.7 12.7Z"
+        fill="#7AA2FF"
+      />
+      <rect x="17.5" y="6" width="2.5" height="12" rx="1.25" fill="#00C2FF" />
+    </svg>
+  );
+}
+
 function createWidget(type, index) {
   if (type === 'reddit') {
     return {
@@ -157,6 +170,20 @@ function createWidget(type, index) {
     };
   }
 
+  if (type === 'anilist') {
+    return {
+      id: crypto.randomUUID(),
+      type: 'anilist',
+      title: `AniList ${index}`,
+      width: 430,
+      mode: 'today',
+      loading: false,
+      error: '',
+      items: [],
+      seasonLabel: '',
+    };
+  }
+
   return {
     id: crypto.randomUUID(),
     type: 'empty',
@@ -170,6 +197,16 @@ function formatForecastDay(dateString) {
     return date.toLocaleDateString(undefined, { weekday: 'short' });
   }
 
+function formatAiringTime(unixSeconds) {
+  if (!unixSeconds) return 'TBA';
+
+  return new Date(unixSeconds * 1000).toLocaleString([], {
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 function WidgetColumn({
   widget,
   onResize,
@@ -177,6 +214,7 @@ function WidgetColumn({
   onWeatherRefresh,
   onSteamQueryChange,
   onSteamSearch,
+  onAniListModeChange,
 }) {
   return (
     <div
@@ -185,6 +223,8 @@ function WidgetColumn({
           ? 'deck-widget-column--weather'
           : widget.type === 'steam'
           ? 'deck-widget-column--steam'
+          : widget.type === 'anilist'
+          ? 'deck-widget-column--anilist'
           : ''
       }`}
       style={{ width: `${widget.width}px` }}
@@ -198,6 +238,8 @@ function WidgetColumn({
               ? 'WEATHER WIDGET'
               : widget.type === 'steam'
               ? 'STEAM WIDGET'
+              : widget.type === 'anilist'
+              ? 'ANILIST WIDGET'
               : 'EMPTY WIDGET'}
           </p>
           <h3 className="deck-widget-title">{widget.title}</h3>
@@ -365,6 +407,71 @@ function WidgetColumn({
               </div>
             )}
           </div>
+        ) : widget.type === 'anilist' ? (
+          <div className="anilist-widget">
+            <div className="anilist-widget-controls">
+              <button
+                type="button"
+                className={`anilist-mode-btn ${widget.mode === 'today' ? 'anilist-mode-btn--active' : ''}`}
+                onClick={() => onAniListModeChange(widget.id, 'today')}
+              >
+                Airs Today
+              </button>
+              <button
+                type="button"
+                className={`anilist-mode-btn ${widget.mode === 'week' ? 'anilist-mode-btn--active' : ''}`}
+                onClick={() => onAniListModeChange(widget.id, 'week')}
+              >
+                This Week
+              </button>
+              <button
+                type="button"
+                className={`anilist-mode-btn ${widget.mode === 'season' ? 'anilist-mode-btn--active' : ''}`}
+                onClick={() => onAniListModeChange(widget.id, 'season')}
+              >
+                Upcoming Season
+              </button>
+            </div>
+
+            {widget.mode === 'season' && widget.seasonLabel ? (
+              <p className="anilist-season-label">{widget.seasonLabel}</p>
+            ) : null}
+
+            {widget.loading ? (
+              <div className="anilist-widget-status">Loading anime...</div>
+            ) : widget.error ? (
+              <div className="anilist-widget-status anilist-widget-status--error">
+                {widget.error}
+              </div>
+            ) : (
+              <div className="anilist-list">
+                {widget.items?.map((anime) => (
+                  <a
+                    key={`${anime.id}-${anime.episode ?? 'na'}`}
+                    href={anime.siteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="anilist-card"
+                  >
+                    <img
+                      src={anime.coverImage}
+                      alt={anime.title}
+                      className="anilist-card-image"
+                    />
+                    <div className="anilist-card-meta">
+                      <p className="anilist-card-title">{anime.title}</p>
+                      <p className="anilist-card-episode">
+                        {anime.episode ? `Episode ${anime.episode}` : 'Upcoming'}
+                      </p>
+                      <p className="anilist-card-time">
+                        {anime.airingAt ? formatAiringTime(anime.airingAt) : `${anime.season} ${anime.seasonYear}`}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
         ) : widget.type === 'reddit' ? (
           <div className="deck-widget-placeholder reddit-widget-placeholder">
             <div className="reddit-widget-badge">
@@ -408,10 +515,15 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
     description: 'Current conditions and today’s forecast for a city.',
   },
   {
-  id: 'steam',
-  name: 'Steam',
-  description: 'Featured games, store cards, and quick search.',
-},
+    id: 'steam',
+    name: 'Steam',
+    description: 'Featured games, store cards, and quick search.',
+  },
+  {
+    id: 'anilist',
+    name: 'AniList',
+    description: 'Anime airing today, this week, and upcoming seasonal shows.',
+  },
 ];
 
   const filteredServices = services.filter((service) =>
@@ -475,6 +587,7 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
                   {service.id === 'reddit' && <RedditLogo />}
                   {service.id === 'weather' && <WeatherLogo />}
                   {service.id === 'steam' && <SteamLogo />}
+                  {service.id === 'anilist' && <AniListLogo />}
                 </div>
 
                 <div className="widget-service-content">
@@ -500,6 +613,7 @@ function DeckArea({
   onWeatherRefresh,
   onSteamQueryChange,
   onSteamSearch,
+  onAniListModeChange,
 }) {
   return (
     <section className="deck-panel">
@@ -548,6 +662,7 @@ function DeckArea({
                 onWeatherRefresh={onWeatherRefresh}
                 onSteamQueryChange={onSteamQueryChange}
                 onSteamSearch={onSteamSearch}
+                onAniListModeChange={onAniListModeChange}
               />
             ))}
           </div>
@@ -669,6 +784,13 @@ export default function DashboardPage({ onLogout }) {
         fetchSteamForWidget(newWidget.id, '');
       }, 0);
     }
+
+    if (type === 'anilist') {
+      setTimeout(() => {
+        fetchAniListForWidget(newWidget.id, 'today');
+      }, 0);
+    }
+
   }
 
   function handleResizeWidget(widgetId, delta) {
@@ -750,6 +872,69 @@ export default function DashboardPage({ onLogout }) {
     fetchSteamForWidget(widgetId, widget.query.trim());
   }
 
+  // Anilist functions
+  async function fetchAniListForWidget(widgetId, mode = 'today') {
+    setWidgets((prev) =>
+      prev.map((widget) =>
+        widget.id === widgetId
+          ? { ...widget, loading: true, error: '', mode }
+          : widget
+      )
+    );
+
+    try {
+      const endpoint =
+        mode === 'today'
+          ? 'today'
+          : mode === 'week'
+          ? 'week'
+          : 'season';
+
+      const response = await fetch(`http://localhost:5000/api/anilist/${endpoint}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch AniList data.');
+      }
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: '',
+                items: data.items || [],
+                seasonLabel:
+                  mode === 'season' && data.season && data.year
+                    ? `${data.season} ${data.year}`
+                    : '',
+                mode,
+              }
+            : widget
+        )
+      );
+    } catch (error) {
+      console.error('AniList fetch failed:', error);
+
+      setWidgets((prev) =>
+        prev.map((widget) =>
+          widget.id === widgetId
+            ? {
+                ...widget,
+                loading: false,
+                error: error.message || 'Unable to load AniList data.',
+              }
+            : widget
+        )
+      );
+    }
+  }
+
+  function handleAniListModeChange(widgetId, mode) {
+    fetchAniListForWidget(widgetId, mode);
+  }
+
   return (
     <div className="dashboard-shell">
       <Sidebar onAddWidget={openWidgetPicker} onLogout={onLogout} />
@@ -789,6 +974,7 @@ export default function DashboardPage({ onLogout }) {
           onWeatherRefresh={handleWeatherRefresh}
           onSteamQueryChange={handleSteamQueryChange}
           onSteamSearch={handleSteamSearch}
+          onAniListModeChange={handleAniListModeChange}
         />
 
         <section className="dashboard-connections-grid">

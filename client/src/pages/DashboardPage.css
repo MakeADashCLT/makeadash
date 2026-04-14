@@ -770,3 +770,121 @@
   font-weight: 700;
   font-size: 14px;
 }
+
+.deck-widget-column--anilist {
+  min-width: 430px;
+}
+
+.anilist-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.anilist-widget-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.anilist-mode-btn {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #17181d;
+  color: #d9d8d4;
+  border-radius: 12px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font: inherit;
+  transition: 140ms ease;
+}
+
+.anilist-mode-btn:hover {
+  background: #21232a;
+}
+
+.anilist-mode-btn--active {
+  background: rgba(122, 162, 255, 0.18);
+  border-color: rgba(122, 162, 255, 0.4);
+  color: #dfe8ff;
+}
+
+.anilist-season-label {
+  margin: 0;
+  color: #9ea6b8;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.anilist-widget-status {
+  color: #d5d4d1;
+  background: #1a1918;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.anilist-widget-status--error {
+  color: #ffb6aa;
+  border-color: rgba(255, 110, 86, 0.26);
+}
+
+.anilist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.anilist-card {
+  display: flex;
+  gap: 12px;
+  text-decoration: none;
+  background: #17181d;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 10px;
+  transition: 140ms ease;
+}
+
+.anilist-card:hover {
+  background: #21232a;
+  border-color: rgba(122, 162, 255, 0.3);
+}
+
+.anilist-card-image {
+  width: 84px;
+  height: 118px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.anilist-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.anilist-card-title {
+  margin: 0;
+  color: #f1f0ed;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.anilist-card-episode {
+  margin: 0;
+  color: #9cc7ff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.anilist-card-time {
+  margin: 0;
+  color: #a7a6a2;
+  font-size: 13px;
+}
