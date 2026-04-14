@@ -631,42 +631,70 @@ export default function DashboardPage({ onLogout }) {
     const { data, error } = await supabase
       .from('widgets')
       .select('*')
-      .eq('user_id', user.id)
-      .order('order_index', { ascending: true });
+      .eq('user_id', user.id);
 
     if (error) {
       console.error(error);
       return;
     }
 
-    const formatted = data.map((w) => ({
-      id: w.id,
-      type: w.config.type,
-      title: w.name,
-      width: w.config.width,
-      city: w.config.city,
-      order_index: w.order_index ?? 0,
-      ...w.config,
-    }));
+    const formatted = data.map((w) => {
+      const { id: _configId, ...safeConfig } = w.config || {};
+
+      return {
+        ...safeConfig,
+        id: w.id,
+        type: safeConfig.type,
+        title: w.name,
+        width: safeConfig.width,
+        city: safeConfig.city,
+      };
+    });
 
     setWidgets(formatted);
   }
 
   async function handleRemoveWidget(widgetId) {
-    const { data: userData } = await supabase.auth.getUser();
+    console.log('Attempting to delete widget:', widgetId);
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      console.error('Could not get current user for delete:', userError);
+      return;
+    }
+
     const user = userData.user;
-    const { error } = await supabase
+    console.log('Current user id:', user.id);
+
+    // Optional: verify the row exists before deleting
+    const { data: existingRows, error: lookupError } = await supabase
+      .from('widgets')
+      .select('id, user_id, name')
+      .eq('id', widgetId);
+
+    console.log('Widget rows matching id before delete:', existingRows);
+    if (lookupError) {
+      console.error('Lookup before delete failed:', lookupError);
+    }
+
+    const { data: deletedRows, error } = await supabase
       .from('widgets')
       .delete()
       .eq('id', widgetId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .select();
 
     if (error) {
       console.error('Failed to delete widget:', error);
       return;
     }
 
+    console.log('Deleted rows:', deletedRows);
+
     setWidgets((prev) => prev.filter((widget) => widget.id !== widgetId));
+
+    // Optional hard refresh from DB to confirm truth
+    await loadWidgets();
   }
 
   async function persistWidgetOrder(reorderedWidgets) {
