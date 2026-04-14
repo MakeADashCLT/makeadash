@@ -580,7 +580,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const response = await fetch(
-        `http://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/weather?city=${encodeURIComponent(city)}`
+        `https://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/weather?city=${encodeURIComponent(city)}`
       );
       const text = await response.text();
       const data = JSON.parse(text);
@@ -616,7 +616,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const response = await fetch(
-        `http://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/steam/featured?q=${encodeURIComponent(query)}`
+        `https://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/steam/featured?q=${encodeURIComponent(query)}`
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to fetch Steam games.');
@@ -653,7 +653,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const endpoint = mode === 'today' ? 'today' : mode === 'week' ? 'week' : 'season';
-      const response = await fetch(`http://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/anilist/${endpoint}`);
+      const response = await fetch(`https://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/anilist/${endpoint}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to fetch AniList data.');
       setWidgets((prev) =>
@@ -699,7 +699,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const res = await fetch(
-        `http://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/github/user?username=${encodeURIComponent(username)}`,
+        `https://makeadash-env.eba-zpmydmm6.us-east-1.elasticbeanstalk.com/api/github/user?username=${encodeURIComponent(username)}`,
         { credentials: 'include' }
       );
       const data = await res.json();
