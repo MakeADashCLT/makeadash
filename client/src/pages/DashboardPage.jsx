@@ -789,6 +789,7 @@ export default function DashboardPage({ onLogout }) {
     setWidgets((prev) => [...prev, savedWidget]);
     closeWidgetPicker();
 
+    // optional auto-loads
     if (type === 'weather') {
       setTimeout(() => fetchWeatherForWidget(savedWidget.id, savedWidget.city), 0);
     }
