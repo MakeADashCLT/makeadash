@@ -119,6 +119,7 @@ function WidgetColumn({
   onAniListModeChange,
   onGithubUsernameChange,
   onGithubSearch,
+  onRemoveWidget,
 }) {
   return (
     <div
@@ -148,6 +149,14 @@ function WidgetColumn({
           <button type="button" className="deck-widget-resize-btn"
             onClick={() => onResize(widget.id, 40)}
             aria-label={`Make ${widget.title} wider`}>+</button>
+          <button
+            type="button"
+            className="deck-widget-remove-btn"
+            onClick={() => onRemoveWidget(widget.id)}
+            aria-label={`Remove ${widget.title}`}
+          >
+            ×
+          </button>
         </div>
       </div>
 
@@ -475,6 +484,7 @@ function DeckArea({
   onAniListModeChange,
   onGithubUsernameChange,
   onGithubSearch,
+  onRemoveWidget,
 }) {
   return (
     <section className="deck-panel">
@@ -515,6 +525,7 @@ function DeckArea({
                 onAniListModeChange={onAniListModeChange}
                 onGithubUsernameChange={onGithubUsernameChange}
                 onGithubSearch={onGithubSearch}
+                onRemoveWidget={onRemoveWidget}
               />
             ))}
           </div>
@@ -571,6 +582,20 @@ export default function DashboardPage({ onLogout }) {
     }));
 
     setWidgets(formatted);
+  }
+
+  async function handleRemoveWidget(widgetId) {
+    const { error } = await supabase
+      .from('widgets')
+      .delete()
+      .eq('id', widgetId);
+
+    if (error) {
+      console.error('Failed to delete widget:', error);
+      return;
+    }
+
+    setWidgets((prev) => prev.filter((widget) => widget.id !== widgetId));
   }
 
   // ── Weather ─────────────────────────────────────────────────────────────────
@@ -727,7 +752,6 @@ export default function DashboardPage({ onLogout }) {
   function closeWidgetPicker() { setIsWidgetModalOpen(false); }
 
   async function handleAddWidgetByType(type) {
-    
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
 
@@ -739,9 +763,7 @@ export default function DashboardPage({ onLogout }) {
         user_id: user.id,
         name: newWidget.title,
         config: {
-          type: newWidget.type,
-          width: newWidget.width,
-          city: newWidget.city || null,
+          ...newWidget,
         },
       })
       .select()
@@ -758,20 +780,23 @@ export default function DashboardPage({ onLogout }) {
     };
 
     setWidgets((prev) => [...prev, savedWidget]);
-
     closeWidgetPicker();
 
     if (type === 'weather') {
-      setTimeout(() => {
-        fetchWeatherForWidget(savedWidget.id, savedWidget.city);
-      }, 0);
+      setTimeout(() => fetchWeatherForWidget(savedWidget.id, savedWidget.city), 0);
     }
-    setWidgets((prev) => [...prev, newWidget]);
-    closeWidgetPicker();
 
-    if (type === 'weather') setTimeout(() => fetchWeatherForWidget(newWidget.id, newWidget.city), 0);
-    if (type === 'steam')   setTimeout(() => fetchSteamForWidget(newWidget.id, ''), 0);
-    if (type === 'anilist') setTimeout(() => fetchAniListForWidget(newWidget.id, 'today'), 0);
+    if (type === 'steam') {
+      setTimeout(() => fetchSteamForWidget(savedWidget.id, ''), 0);
+    }
+
+    if (type === 'anilist') {
+      setTimeout(() => fetchAniListForWidget(savedWidget.id, 'today'), 0);
+    }
+
+    if (type === 'github') {
+      // no auto-fetch until username entered
+    }
   }
 
   function handleResizeWidget(widgetId, delta) {
@@ -820,6 +845,7 @@ export default function DashboardPage({ onLogout }) {
           onAniListModeChange={handleAniListModeChange}
           onGithubUsernameChange={handleGithubUsernameChange}
           onGithubSearch={handleGithubSearch}
+          onRemoveWidget={handleRemoveWidget}
         />
 
         <section className="dashboard-connections-grid">
