@@ -1008,3 +1008,101 @@
   transition: color 140ms ease;
 }
 .github-profile-link:hover { color: #7edfd7; }
+
+/* ===== Calendar Widget ===== */
+
+.deck-widget-column--calendar {
+  min-width: 430px;
+}
+
+.calendar-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.calendar-widget-empty,
+.calendar-widget-status {
+  background: #17181d;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.calendar-widget-title-text {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f0ed;
+}
+
+.calendar-widget-text {
+  margin: 0 0 14px;
+  color: #a7a6a2;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.calendar-widget-status--error {
+  color: #ffb6aa;
+  border-color: rgba(255, 110, 86, 0.26);
+}
+
+.calendar-view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.calendar-view-btn {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #17181d;
+  color: #d9d8d4;
+  border-radius: 12px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font: inherit;
+  transition: 140ms ease;
+}
+
+.calendar-view-btn:hover {
+  background: #21232a;
+}
+
+.calendar-view-btn--active {
+  background: rgba(79, 152, 163, 0.18);
+  border-color: rgba(79, 152, 163, 0.4);
+  color: #dff6f8;
+}
+
+.calendar-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calendar-event-card {
+  background: #1f2128;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.calendar-event-title {
+  margin: 0;
+  color: #f1f0ed;
+  font-weight: 700;
+}
+
+.calendar-event-time {
+  margin: 6px 0 0;
+  color: #9cc7ff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.calendar-event-location {
+  margin: 6px 0 0;
+  color: #a7a6a2;
+  font-size: 13px;
+}

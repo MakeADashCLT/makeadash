@@ -91,21 +91,21 @@ export default function LoginPage({ onLogin }) {
   const [error, setError]           = useState('')
 
   const handleOAuth = async (provider) => {
-  setLoading(true)
-  setError('')
+    setLoading(true)
+    setError('')
 
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: provider,
-    options: {
-      redirectTo: window.location.origin
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    if (error) {
+      setError(error.message)
+      setLoading(false)
     }
-  })
-
-  if (error) {
-    setError(error.message)
-    setLoading(false)
   }
-}
 
   const handleEmailLogin = async (e) => {
     e.preventDefault()
