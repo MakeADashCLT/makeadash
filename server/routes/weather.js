@@ -92,6 +92,13 @@ router.get('/', async (req, res) => {
       condition: weatherCodeToText(weatherData.current?.weather_code),
       high: weatherData.daily?.temperature_2m_max?.[0] ?? null,
       low: weatherData.daily?.temperature_2m_min?.[0] ?? null,
+      forecast: (weatherData.daily?.time || []).slice(0, 5).map((date, index) => ({
+        date,
+        high: weatherData.daily?.temperature_2m_max?.[index] ?? null,
+        low: weatherData.daily?.temperature_2m_min?.[index] ?? null,
+        weatherCode: weatherData.daily?.weather_code?.[index] ?? null,
+        condition: weatherCodeToText(weatherData.daily?.weather_code?.[index]),
+      })),
     };
 
     res.json(result);

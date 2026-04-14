@@ -130,6 +130,11 @@ function createWidget(type, index) {
   };
 }
 
+function formatForecastDay(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, { weekday: 'short' });
+  }
+
 function WidgetColumn({
   widget,
   onResize,
@@ -238,6 +243,27 @@ function WidgetColumn({
                     </span>
                   </div>
                 </div>
+
+                  <div className="weather-forecast">
+                    <p className="weather-forecast-title">Next few days</p>
+
+                    <div className="weather-forecast-list">
+                      {widget.data.forecast?.slice(1).map((day) => (
+                        <div key={day.date} className="weather-forecast-row">
+                          <span className="weather-forecast-day">
+                            {formatForecastDay(day.date)}
+                          </span>
+                          <span className="weather-forecast-condition">
+                            {day.condition}
+                          </span>
+                          <span className="weather-forecast-temps">
+                            {Math.round(day.high)}° / {Math.round(day.low)}°
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
               </div>
             ) : (
               <div className="weather-widget-status">No weather loaded yet.</div>

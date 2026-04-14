@@ -619,3 +619,48 @@
   font-weight: 700;
   color: #f0efec;
 }
+
+.weather-forecast {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.weather-forecast-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #e8e7e3;
+}
+
+.weather-forecast-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.weather-forecast-row {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.weather-forecast-day {
+  font-weight: 700;
+  color: #f0efec;
+}
+
+.weather-forecast-condition {
+  color: #a3a19d;
+  font-size: 13px;
+}
+
+.weather-forecast-temps {
+  color: #f0efec;
+  font-weight: 700;
+  white-space: nowrap;
+}
