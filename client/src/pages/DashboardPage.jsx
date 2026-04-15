@@ -882,8 +882,8 @@ function formatCalendarEventTime(startObj, endObj) {
 export default function DashboardPage({ onLogout }) {
   const [widgets, setWidgets] = useState([]);
   const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_BASE_URL;
-
+  const API_BASE = 'https://www.makeadash.tech';
+  console.log("API_BASE =", API_BASE);
   useEffect(() => {
     loadWidgets();
   }, []);
@@ -1000,7 +1000,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const response = await fetch(
-        `${API_BASE}/api/weather?city=${encodeURIComponent(city)}`
+        `https://www.makeadash.tech/api/weather?city=${encodeURIComponent(city)}`
       );
       const text = await response.text();
       const data = JSON.parse(text);
@@ -1036,7 +1036,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const response = await fetch(
-        `${API_BASE}/api/steam/featured?q=${encodeURIComponent(query)}`
+        `$https://www.makeadash.tech/api/steam/featured?q=${encodeURIComponent(query)}`
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to fetch Steam games.');
@@ -1073,7 +1073,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const endpoint = mode === 'today' ? 'today' : mode === 'week' ? 'week' : 'season';
-      const response = await fetch(`${API_BASE}/api/anilist/${endpoint}`);
+      const response = await fetch(`https://www.makeadash.tech/api/anilist/${endpoint}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to fetch AniList data.');
       setWidgets((prev) =>
@@ -1119,7 +1119,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const res = await fetch(
-        `${API_BASE}/api/github/user?username=${encodeURIComponent(username)}`,
+        `https://www.makeadash.tech/api/github/user?username=${encodeURIComponent(username)}`,
         { credentials: 'include' }
       );
       const data = await res.json();
@@ -1320,7 +1320,7 @@ export default function DashboardPage({ onLogout }) {
     );
 
     try {
-      const userRes = await fetch(`${API_BASE}/api/canvas/test`, {
+      const userRes = await fetch(`https://www.makeadash.tech/api/canvas/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ canvasUrl, canvasToken }),
@@ -1332,7 +1332,7 @@ export default function DashboardPage({ onLogout }) {
         throw new Error(userJson.error || 'Canvas connection failed.');
       }
 
-      const assignmentsRes = await fetch(`${API_BASE}/api/canvas/assignments`, {
+      const assignmentsRes = await fetch(`https://www.makeadash.tech/api/canvas/assignments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ canvasUrl, canvasToken }),
