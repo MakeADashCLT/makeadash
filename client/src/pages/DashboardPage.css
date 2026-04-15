@@ -1106,3 +1106,94 @@
   color: #a7a6a2;
   font-size: 13px;
 }
+
+/* ===== Canvas Widget ===== */
+
+.deck-widget-column--canvas {
+  min-width: 430px;
+}
+
+.canvas-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.canvas-widget-dev-note {
+  background: rgba(255, 184, 77, 0.12);
+  border: 1px solid rgba(255, 184, 77, 0.24);
+  color: #ffd28a;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.canvas-widget-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.canvas-widget-input {
+  width: 100%;
+  background: #111110;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ecebe7;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  outline: none;
+}
+
+.canvas-widget-input:focus {
+  border-color: rgba(79, 152, 163, 0.6);
+  box-shadow: 0 0 0 3px rgba(79, 152, 163, 0.14);
+}
+
+.canvas-widget-status {
+  color: #d5d4d1;
+  background: #1a1918;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.canvas-widget-status--error {
+  color: #ffb6aa;
+  border-color: rgba(255, 110, 86, 0.26);
+}
+
+.canvas-assignments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+.canvas-assignment-card {
+  background: #1f2128;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.canvas-assignment-title {
+  margin: 0;
+  color: #f1f0ed;
+  font-weight: 700;
+}
+
+.canvas-assignment-course {
+  margin: 6px 0 0;
+  color: #9cc7ff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.canvas-assignment-meta {
+  margin: 6px 0 0;
+  color: #a7a6a2;
+  font-size: 13px;
+}

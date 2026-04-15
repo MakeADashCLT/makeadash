@@ -98,6 +98,21 @@ function CalendarLogo() {
   );
 }
 
+function CanvasLmsLogo() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#C8102E" />
+      <circle cx="12" cy="6.4" r="1.5" fill="white" />
+      <circle cx="17.2" cy="9.4" r="1.5" fill="white" />
+      <circle cx="17.2" cy="14.6" r="1.5" fill="white" />
+      <circle cx="12" cy="17.6" r="1.5" fill="white" />
+      <circle cx="6.8" cy="14.6" r="1.5" fill="white" />
+      <circle cx="6.8" cy="9.4" r="1.5" fill="white" />
+      <circle cx="12" cy="12" r="2.1" fill="white" />
+    </svg>
+  );
+}
+
 function generateId() {
   return crypto?.randomUUID?.() ??
     Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -107,22 +122,27 @@ function createWidget(type) {
   if (type === 'reddit') return {
     id: generateId(), type: 'reddit', title: 'Reddit', width: 320,
   };
+
   if (type === 'weather') return {
     id: generateId(), type: 'weather', title: 'Weather',
     width: 400, city: 'Charlotte', loading: false, error: '', data: null,
   };
+
   if (type === 'steam') return {
     id: generateId(), type: 'steam', title: 'Steam',
     width: 480, query: '', loading: false, error: '', items: [],
   };
+
   if (type === 'anilist') return {
     id: generateId(), type: 'anilist', title: 'AniList',
     width: 430, mode: 'today', loading: false, error: '', items: [], seasonLabel: '',
   };
+
   if (type === 'github') return {
     id: generateId(), type: 'github', title: 'GitHub',
     width: 360, username: '', loading: false, error: '', data: null,
   };
+
   if (type === 'calendar') return {
     id: generateId(),
     type: 'calendar',
@@ -134,6 +154,21 @@ function createWidget(type) {
     connected: false,
     view: 'today',
   };
+
+  if (type === 'canvas') return {
+  id: generateId(),
+  type: 'canvas',
+  title: 'Canvas',
+  width: 430,
+  canvasUrl: '',
+  canvasToken: '',
+  loading: false,
+  error: '',
+  connected: false,
+  assignments: [],
+  courseColors: {},
+};
+
   return {
     id: generateId(), type: 'empty', title: 'Widget', width: 320,
   };
@@ -166,6 +201,9 @@ function WidgetColumn({
   onRemoveWidget,
   onConnectGoogleCalendar,
   onFetchCalendarEvents,
+  onCanvasUrlChange,
+  onCanvasTokenChange,
+  onCanvasConnect,
 }) {
   return (
     <div
@@ -175,6 +213,7 @@ function WidgetColumn({
         widget.type === 'anilist' ? 'deck-widget-column--anilist' :
         widget.type === 'github'  ? 'deck-widget-column--github'  : 
         widget.type === 'calendar' ? 'deck-widget-column--calendar' :
+        widget.type === 'canvas' ? 'deck-widget-column--canvas' :
         ''
       }`}
       style={{ width: `${widget.width}px` }}
@@ -187,7 +226,9 @@ function WidgetColumn({
              widget.type === 'steam'   ? 'STEAM WIDGET'   :
              widget.type === 'anilist' ? 'ANILIST WIDGET' :
              widget.type === 'github'  ? 'GITHUB WIDGET'  :
-             widget.type === 'calendar'? 'CALENDAR WIDGET' : 'EMPTY WIDGET'}
+             widget.type === 'calendar' ? 'CALENDAR WIDGET' :
+             widget.type === 'canvas' ? 'CANVAS WIDGET' :
+            'EMPTY WIDGET'}
           </p>
           <h3 className="deck-widget-title">{widget.title}</h3>
         </div>
@@ -510,6 +551,77 @@ function WidgetColumn({
           </div>
         )}
 
+        {/* ── Canvas ── */}
+        {widget.type === 'canvas' && (
+          <div className="canvas-widget">
+            <div className="canvas-widget-dev-note">
+              Dev only: use your Canvas base URL and personal access token.
+            </div>
+
+            <div className="canvas-widget-controls">
+              <input
+                type="text"
+                className="canvas-widget-input"
+                value={widget.canvasUrl}
+                onChange={(e) => onCanvasUrlChange(widget.id, e.target.value)}
+                placeholder="https://your-school.instructure.com"
+              />
+              <input
+                type="password"
+                className="canvas-widget-input"
+                value={widget.canvasToken}
+                onChange={(e) => onCanvasTokenChange(widget.id, e.target.value)}
+                placeholder="Canvas access token"
+              />
+              <button
+                type="button"
+                className="deck-primary-btn"
+                onClick={() => onCanvasConnect(widget.id)}
+              >
+                Connect
+              </button>
+            </div>
+
+            {widget.loading ? (
+              <div className="canvas-widget-status">Connecting to Canvas...</div>
+            ) : widget.error ? (
+              <div className="canvas-widget-status canvas-widget-status--error">
+                {widget.error}
+              </div>
+            ) : widget.connected ? (
+              <div className="canvas-assignments-list">
+                {widget.assignments.length > 0 ? (
+                  widget.assignments.map((assignment) => (
+                    <div
+                      key={assignment.id}
+                      className="canvas-assignment-card"
+                      style={{
+                        borderLeft: `4px solid ${widget.courseColors?.[assignment.courseName] || '#4f98a3'}`,
+                      }}
+                    >
+                      <p className="canvas-assignment-title">{assignment.name}</p>
+                      <p className="canvas-assignment-course">{assignment.courseName}</p>
+                      <p className="canvas-assignment-meta">
+                        Due: {assignment.dueAt || 'No due date'}
+                      </p>
+                      <p className="canvas-assignment-meta">
+                        Points: {assignment.pointsPossible ?? 'N/A'}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="canvas-widget-status">No upcoming assignments found.</div>
+                )}
+              </div>
+            ) : (
+              <div className="canvas-widget-status">
+                Enter a Canvas URL and token to test the connection.
+              </div>
+            )}
+          </div>
+        )}
+        
+
         {/* ── Empty ── */}
         {widget.type === 'empty' && (
           <div className="deck-widget-placeholder">
@@ -539,6 +651,7 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
     { id: 'anilist', name: 'AniList', description: 'Anime airing today, this week, and upcoming seasonal shows.' },
     { id: 'github',  name: 'GitHub',  description: 'Profile stats and recently updated repos for any user.' },
     { id: 'calendar', name: 'Google Calendar', description: 'Connect and view your calendars and upcoming events.' },
+    { id: 'canvas', name: 'Canvas', description: 'Dev-only token test for assignments, due dates, and points.' },
   ];
 
   const filteredServices = services.filter((service) =>
@@ -579,6 +692,7 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
                   {service.id === 'anilist' && <AniListLogo />}
                   {service.id === 'github'  && <GitHubLogo />}
                   {service.id === 'calendar' && <CalendarLogo />}
+                  {service.id === 'canvas' && <CanvasLmsLogo />}
 
                 </div>
                 <div className="widget-service-content">
@@ -637,6 +751,9 @@ function DeckArea({
   onDragEnd,
   onConnectGoogleCalendar,
   onFetchCalendarEvents,
+  onCanvasUrlChange,
+  onCanvasTokenChange,
+  onCanvasConnect,
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -697,6 +814,9 @@ function DeckArea({
                       onRemoveWidget={onRemoveWidget}
                       onConnectGoogleCalendar={onConnectGoogleCalendar}
                       onFetchCalendarEvents={onFetchCalendarEvents}
+                      onCanvasUrlChange={onCanvasUrlChange}
+                      onCanvasTokenChange={onCanvasTokenChange}
+                      onCanvasConnect={onCanvasConnect}
                     />
                   </SortableWidgetItem>
                 ))}
@@ -1155,6 +1275,110 @@ export default function DashboardPage({ onLogout }) {
     }
   }, [widgets]);
 
+  // Canvas
+  function handleCanvasUrlChange(widgetId, value) {
+    setWidgets((prev) =>
+      prev.map((w) => (w.id === widgetId ? { ...w, canvasUrl: value } : w))
+    );
+  }
+
+  function handleCanvasTokenChange(widgetId, value) {
+    setWidgets((prev) =>
+      prev.map((w) => (w.id === widgetId ? { ...w, canvasToken: value } : w))
+    );
+  }
+
+    function pickCourseColor(index) {
+    const palette = ['#4f98a3', '#7aa2ff', '#ff9f43', '#9bdeac', '#ec6ead', '#c792ea'];
+    return palette[index % palette.length];
+  }
+
+  async function connectCanvasWidget(widgetId) {
+    const widget = widgets.find((w) => w.id === widgetId);
+    if (!widget) return;
+
+    const canvasUrl = widget.canvasUrl.trim().replace(/\/+$/, '');
+    const canvasToken = widget.canvasToken.trim();
+
+    if (!canvasUrl || !canvasToken) {
+      setWidgets((prev) =>
+        prev.map((w) =>
+          w.id === widgetId
+            ? { ...w, error: 'Canvas URL and token are required.' }
+            : w
+        )
+      );
+      return;
+    }
+
+    setWidgets((prev) =>
+      prev.map((w) =>
+        w.id === widgetId
+          ? { ...w, loading: true, error: '', connected: false }
+          : w
+      )
+    );
+
+    try {
+      const userRes = await fetch(`${API_BASE}/api/canvas/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ canvasUrl, canvasToken }),
+      });
+
+      const userJson = await userRes.json();
+
+      if (!userRes.ok) {
+        throw new Error(userJson.error || 'Canvas connection failed.');
+      }
+
+      const assignmentsRes = await fetch(`${API_BASE}/api/canvas/assignments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ canvasUrl, canvasToken }),
+      });
+
+      const assignmentsJson = await assignmentsRes.json();
+
+      if (!assignmentsRes.ok) {
+        throw new Error(assignmentsJson.error || 'Failed to fetch assignments.');
+      }
+
+      const uniqueCourses = [...new Set(assignmentsJson.assignments.map((a) => a.courseName))];
+      const courseColors = Object.fromEntries(
+        uniqueCourses.map((course, index) => [course, pickCourseColor(index)])
+      );
+
+      setWidgets((prev) =>
+        prev.map((w) =>
+          w.id === widgetId
+            ? {
+                ...w,
+                loading: false,
+                error: '',
+                connected: true,
+                assignments: assignmentsJson.assignments || [],
+                courseColors,
+              }
+            : w
+        )
+      );
+    } catch (error) {
+      setWidgets((prev) =>
+        prev.map((w) =>
+          w.id === widgetId
+            ? {
+                ...w,
+                loading: false,
+                error: error.message || 'Unable to connect to Canvas.',
+                connected: false,
+              }
+            : w
+        )
+      );
+    }
+  }
+
   // ── Widget picker ────────────────────────────────────────────────────────────
   function openWidgetPicker()  { setIsWidgetModalOpen(true);  }
   function closeWidgetPicker() { setIsWidgetModalOpen(false); }
@@ -1178,6 +1402,8 @@ export default function DashboardPage({ onLogout }) {
           query: newWidget.query,
           mode: newWidget.mode,
           username: newWidget.username,
+          canvasUrl: newWidget.canvasUrl,
+          canvasToken: newWidget.canvasToken,
         },
       })
       .select()
@@ -1269,6 +1495,9 @@ export default function DashboardPage({ onLogout }) {
           onDragEnd={handleDragEnd}
           onConnectGoogleCalendar={connectGoogleCalendar}
           onFetchCalendarEvents={fetchCalendarEventsForWidget}
+          onCanvasUrlChange={handleCanvasUrlChange}
+          onCanvasTokenChange={handleCanvasTokenChange}
+          onCanvasConnect={connectCanvasWidget}
         />
 
         <section className="dashboard-connections-grid">

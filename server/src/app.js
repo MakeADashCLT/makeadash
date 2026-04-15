@@ -11,6 +11,7 @@ const weatherRoutes = require('../routes/weather');
 const steamRoutes = require("../routes/steam");
 const anilistRoutes = require("../routes/anilist");
 const githubRoutes = require("../routes/github"); 
+const canvasRoutes = require("../routes/canvas");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/weather', weatherRoutes);
 app.use("/api/steam", steamRoutes);
 app.use("/api/anilist", anilistRoutes);
 app.use('/api/github', githubRoutes);     
+app.use('/api/canvas', canvasRoutes)
 
 const path = require("path");
 
