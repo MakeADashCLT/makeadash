@@ -12,6 +12,8 @@ const steamRoutes = require("../routes/steam");
 const anilistRoutes = require("../routes/anilist");
 const githubRoutes = require("../routes/github"); 
 const canvasRoutes = require("../routes/canvas");
+const spotifyRoutes = require("../routes/spotify");
+
 
 const app = express();
 
@@ -27,6 +29,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "default_secret",
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  },
 }));
 
 // Initialize Passport
@@ -41,7 +48,9 @@ app.use('/api/weather', weatherRoutes);
 app.use("/api/steam", steamRoutes);
 app.use("/api/anilist", anilistRoutes);
 app.use('/api/github', githubRoutes);     
-app.use('/api/canvas', canvasRoutes)
+app.use('/api/canvas', canvasRoutes);
+app.use('/api/spotify',  spotifyRoutes);
+
 
 const path = require("path");
 

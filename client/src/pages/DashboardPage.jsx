@@ -113,9 +113,27 @@ function CanvasLmsLogo() {
   );
 }
 
+function SpotifyLogo() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#1DB954" />
+      <path d="M7 9.5c2.8-1.1 6.2-1 9 .5" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M7.5 12.5c2.3-.9 5.2-.8 7.5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M8 15.5c1.8-.7 4-.6 5.8.4" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function generateId() {
   return crypto?.randomUUID?.() ??
     Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function msToTime(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}:${sec.toString().padStart(2, '0')}`;
 }
 
 function createWidget(type) {
@@ -169,6 +187,17 @@ function createWidget(type) {
   courseColors: {},
 };
 
+if (type === 'spotify') return {
+  id: generateId(),
+  type: 'spotify',
+  title: 'Spotify',
+  width: 380,
+  loading: false,
+  error: '',
+  connected: false,
+  data: null,
+};
+
   return {
     id: generateId(), type: 'empty', title: 'Widget', width: 320,
   };
@@ -204,6 +233,9 @@ function WidgetColumn({
   onCanvasUrlChange,
   onCanvasTokenChange,
   onCanvasConnect,
+  onSpotifyConnect,
+  onSpotifyDisconnect,
+  onSpotifyRefresh,
 }) {
   return (
     <div
@@ -214,6 +246,7 @@ function WidgetColumn({
         widget.type === 'github'  ? 'deck-widget-column--github'  : 
         widget.type === 'calendar' ? 'deck-widget-column--calendar' :
         widget.type === 'canvas' ? 'deck-widget-column--canvas' :
+        widget.type === 'spotify' ? 'deck-widget-column--spotify' :
         ''
       }`}
       style={{ width: `${widget.width}px` }}
@@ -228,6 +261,7 @@ function WidgetColumn({
              widget.type === 'github'  ? 'GITHUB WIDGET'  :
              widget.type === 'calendar' ? 'CALENDAR WIDGET' :
              widget.type === 'canvas' ? 'CANVAS WIDGET' :
+             widget.type === 'spotify' ? 'SPOTIFY WIDGET' :
             'EMPTY WIDGET'}
           </p>
           <h3 className="deck-widget-title">{widget.title}</h3>
@@ -621,6 +655,105 @@ function WidgetColumn({
           </div>
         )}
         
+        {/* ── Spotify ── */}
+        {widget.type === 'spotify' && (
+          <div className="spotify-widget">
+            {!widget.connected ? (
+              <div className="spotify-connect-box">
+                <div className="spotify-connect-icon">
+                  <SpotifyLogo />
+                </div>
+                <p className="spotify-connect-title">Connect Spotify</p>
+                <p className="spotify-connect-text">
+                  Sign in with Spotify to see what's playing and your top tracks.
+                </p>
+                <button
+                  type="button"
+                  className="spotify-connect-btn"
+                  onClick={() => onSpotifyConnect(widget.id)}
+                >
+                  Connect Spotify
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="spotify-widget-top-bar">
+                  <div className="spotify-profile-row">
+                    {widget.data?.user?.avatar && (
+                      <img src={widget.data.user.avatar} alt="Spotify avatar" className="spotify-avatar" />
+                    )}
+                    <div>
+                      <p className="spotify-display-name">{widget.data?.user?.name || 'Spotify User'}</p>
+                      <p className="spotify-product">{widget.data?.user?.product || 'free'}</p>
+                    </div>
+                  </div>
+                  <div className="spotify-top-actions">
+                    <button type="button" className="spotify-refresh-btn"
+                      onClick={() => onSpotifyRefresh(widget.id)} aria-label="Refresh Spotify">↻</button>
+                    <button type="button" className="spotify-disconnect-btn"
+                      onClick={() => onSpotifyDisconnect(widget.id)}>Disconnect</button>
+                  </div>
+                </div>
+
+                {widget.loading && <div className="spotify-status">Loading...</div>}
+                {widget.error  && <div className="spotify-status spotify-status--error">{widget.error}</div>}
+
+                {widget.data?.nowPlaying && (
+                  <div className="spotify-now-playing">
+                    <p className="spotify-section-label">NOW PLAYING</p>
+                    <div className="spotify-np-card">
+                      {widget.data.nowPlaying.albumArt && (
+                        <img src={widget.data.nowPlaying.albumArt} alt="Album art" className="spotify-np-art" />
+                      )}
+                      <div className="spotify-np-meta">
+                        <a href={widget.data.nowPlaying.url} target="_blank" rel="noopener noreferrer"
+                          className="spotify-np-title">{widget.data.nowPlaying.name}</a>
+                        <p className="spotify-np-artist">{widget.data.nowPlaying.artist}</p>
+                        <p className="spotify-np-album">{widget.data.nowPlaying.album}</p>
+                        {widget.data.nowPlaying.duration > 0 && (
+                          <>
+                            <div className="spotify-progress-bar">
+                              <div className="spotify-progress-fill" style={{
+                                width: `${(widget.data.nowPlaying.progress / widget.data.nowPlaying.duration) * 100}%`
+                              }} />
+                            </div>
+                            <div className="spotify-progress-times">
+                              <span>{msToTime(widget.data.nowPlaying.progress)}</span>
+                              <span>{msToTime(widget.data.nowPlaying.duration)}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {widget.data?.topTracks?.length > 0 && (
+                  <div className="spotify-section">
+                    <p className="spotify-section-label">TOP TRACKS</p>
+                    <div className="spotify-track-list">
+                      {widget.data.topTracks.map((track, i) => (
+                        <a key={track.id} href={track.url} target="_blank" rel="noopener noreferrer"
+                          className="spotify-track-row">
+                          <span className="spotify-track-num">{i + 1}</span>
+                          {track.albumArt && <img src={track.albumArt} alt={track.name} className="spotify-track-art" />}
+                          <div className="spotify-track-meta">
+                            <p className="spotify-track-name">{track.name}</p>
+                            <p className="spotify-track-artist">{track.artist}</p>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!widget.data?.nowPlaying && !widget.loading && (
+                  <p className="spotify-idle">Nothing playing right now.</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* ── Empty ── */}
         {widget.type === 'empty' && (
@@ -652,6 +785,7 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
     { id: 'github',  name: 'GitHub',  description: 'Profile stats and recently updated repos for any user.' },
     { id: 'calendar', name: 'Google Calendar', description: 'Connect and view your calendars and upcoming events.' },
     { id: 'canvas', name: 'Canvas', description: 'Dev-only token test for assignments, due dates, and points.' },
+    { id: 'spotify', name: 'Spotify', description: 'Now playing, top tracks, and recently played songs.' },
   ];
 
   const filteredServices = services.filter((service) =>
@@ -693,6 +827,7 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
                   {service.id === 'github'  && <GitHubLogo />}
                   {service.id === 'calendar' && <CalendarLogo />}
                   {service.id === 'canvas' && <CanvasLmsLogo />}
+                  {service.id === 'spotify' && <SpotifyLogo />}
 
                 </div>
                 <div className="widget-service-content">
@@ -754,6 +889,9 @@ function DeckArea({
   onCanvasUrlChange,
   onCanvasTokenChange,
   onCanvasConnect,
+  onSpotifyConnect,
+  onSpotifyDisconnect,
+  onSpotifyRefresh,
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -817,6 +955,9 @@ function DeckArea({
                       onCanvasUrlChange={onCanvasUrlChange}
                       onCanvasTokenChange={onCanvasTokenChange}
                       onCanvasConnect={onCanvasConnect}
+                      onSpotifyConnect={onSpotifyConnect}
+                      onSpotifyDisconnect={onSpotifyDisconnect}
+                      onSpotifyRefresh={onSpotifyRefresh}
                     />
                   </SortableWidgetItem>
                 ))}
@@ -1379,6 +1520,72 @@ export default function DashboardPage({ onLogout }) {
     }
   }
 
+  // -- Spotify ----
+  async function fetchSpotifyForWidget(widgetId) {
+  setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, loading: true, error: '' } : w));
+  try {
+    const res = await fetch('https://www.makeadash.tech/api/spotify/me', { credentials: 'include' });
+    const data = await res.json();
+    if (res.status === 401) {
+      setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, loading: false, connected: false, data: null, error: '' } : w));
+      return;
+    }
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch Spotify data.');
+    setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, loading: false, error: '', connected: true, data } : w));
+  } catch (err) {
+    setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, loading: false, error: err.message || 'Unable to load Spotify.' } : w));
+  }
+}
+
+
+function handleSpotifyConnect(widgetId) {
+  sessionStorage.setItem('spotifyWidgetId', widgetId);
+  window.location.href = 'https://www.makeadash.tech/api/spotify/login';
+}
+
+
+async function handleSpotifyDisconnect(widgetId) {
+  try {
+    await fetch('https://www.makeadash.tech/api/spotify/disconnect', { credentials: 'include' });
+  } catch (_) {}
+  setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, connected: false, data: null, error: '' } : w));
+}
+
+
+function handleSpotifyRefresh(widgetId) { fetchSpotifyForWidget(widgetId); }
+
+
+// ── Check status on mount for any existing Spotify widgets ──
+useEffect(() => {
+  async function checkSpotifyStatus() {
+    const spotifyWidgets = widgets.filter(w => w.type === 'spotify');
+    if (spotifyWidgets.length === 0) return;
+    try {
+      const res = await fetch('https://www.makeadash.tech/api/spotify/status', { credentials: 'include' });
+      const { connected } = await res.json();
+      if (connected) {
+        spotifyWidgets.forEach(w => fetchSpotifyForWidget(w.id));
+      }
+    } catch (_) {}
+  }
+  if (widgets.length > 0) checkSpotifyStatus();
+}, [widgets.length]);
+
+useEffect(() => {
+  const spotifyWidgetId = sessionStorage.getItem('spotifyWidgetId');
+  if (!spotifyWidgetId) return;
+  sessionStorage.removeItem('spotifyWidgetId');
+
+  // Wait for widgets to load, then fetch Spotify data
+  const tryFetch = () => {
+    const match = widgets.find(w => w.id === spotifyWidgetId);
+    if (match) {
+      fetchSpotifyForWidget(spotifyWidgetId);
+    }
+  };
+  if (widgets.length > 0) tryFetch();
+}, [widgets.length]);
+
   // ── Widget picker ────────────────────────────────────────────────────────────
   function openWidgetPicker()  { setIsWidgetModalOpen(true);  }
   function closeWidgetPicker() { setIsWidgetModalOpen(false); }
@@ -1498,6 +1705,9 @@ export default function DashboardPage({ onLogout }) {
           onCanvasUrlChange={handleCanvasUrlChange}
           onCanvasTokenChange={handleCanvasTokenChange}
           onCanvasConnect={connectCanvasWidget}
+          onSpotifyConnect={handleSpotifyConnect}
+          onSpotifyDisconnect={handleSpotifyDisconnect}
+          onSpotifyRefresh={handleSpotifyRefresh}
         />
 
         <section className="dashboard-connections-grid">
