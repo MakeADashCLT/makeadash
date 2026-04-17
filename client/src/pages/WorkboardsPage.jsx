@@ -296,7 +296,7 @@ function KanbanColumn({ config, cards, onDelete, onDragStart, onDrop, onAddClick
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-export default function WorkboardsPage({ onLogout }) {
+export default function WorkboardsPage({ onLogout, user }) {
   const [tasks, setTasks]           = useState([])
   const [showModal, setShowModal]   = useState(false)
   const [search, setSearch]         = useState('')
@@ -349,7 +349,7 @@ export default function WorkboardsPage({ onLogout }) {
 
   return (
     <div className="wb-root">
-      <Sidebar activePage="workboards" onLogout={onLogout} />
+      <Sidebar onLogout={onLogout} user={user} onAddWidget={() => {}} />
 
       <div className="wb-main">
         {/* Top bar */}

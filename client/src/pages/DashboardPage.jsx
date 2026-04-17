@@ -1161,7 +1161,7 @@ function formatCalendarEventTime(startObj, endObj) {
 }
 
 
-export default function DashboardPage({ onLogout }) {
+export default function DashboardPage({ onLogout, user }) {
   const [widgets, setWidgets] = useState([]);
   const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
   const API_BASE = 'https://www.makeadash.tech';
@@ -1964,7 +1964,7 @@ useEffect(() => {
 
   return (
     <div className="dashboard-shell">
-      <Sidebar onAddWidget={openWidgetPicker} onLogout={onLogout} />
+    <Sidebar onAddWidget={openWidgetPicker} onLogout={onLogout} user={user} />
 
       <main className="dashboard-main">
         <header className="dashboard-topbar">
