@@ -112,15 +112,38 @@ router.get('/me', async (req, res) => {
       axios.get('https://api.spotify.com/v1/me/player/recently-played?limit=6', { headers, validateStatus: ok }),
     ])
 
+    // ✅ LOGS MOVED HERE — before res.json()
+    console.log('PROFILE:', {
+      status: profileRes.status,
+      code: profileRes.value?.status,
+      data: profileRes.value?.data,
+      error: profileRes.reason?.response?.data || profileRes.reason?.message,
+    })
+    console.log('CURRENT:', {
+      status: currentRes.status,
+      code: currentRes.value?.status,
+      error: currentRes.reason?.response?.data || currentRes.reason?.message,
+    })
+    console.log('TOP:', {
+      status: topRes.status,
+      code: topRes.value?.status,
+      error: topRes.reason?.response?.data || topRes.reason?.message,
+    })
+    console.log('RECENT:', {
+      status: recentRes.status,
+      code: recentRes.value?.status,
+      error: recentRes.reason?.response?.data || recentRes.reason?.message,
+    })
+
     const profile = profileRes.status === 'fulfilled' ? profileRes.value.data : null
     const curRaw  = currentRes.status === 'fulfilled' ? currentRes.value : null
     const topRaw  = topRes.status === 'fulfilled' ? topRes.value.data : { items: [] }
     const recRaw  = recentRes.status === 'fulfilled' ? recentRes.value.data : { items: [] }
 
     const current = curRaw?.status === 200 && curRaw.data?.item ? {
-      isPlaying:   curRaw.data.is_playing,
-      progressMs:  curRaw.data.progress_ms,
-      durationMs:  curRaw.data.item.duration_ms,
+      isPlaying:  curRaw.data.is_playing,
+      progressMs: curRaw.data.progress_ms,
+      durationMs: curRaw.data.item.duration_ms,
       track: {
         name:    curRaw.data.item.name,
         artists: curRaw.data.item.artists.map(a => a.name).join(', '),
@@ -160,33 +183,6 @@ router.get('/me', async (req, res) => {
       current, topTracks, recentTracks,
     })
 
-    console.log('PROFILE:', {
-      status: profileRes.status,
-      code: profileRes.value?.status,
-      data: profileRes.value?.data,
-      error: profileRes.reason?.response?.data || profileRes.reason?.message,
-    });
-
-    console.log('CURRENT:', {
-      status: currentRes.status,
-      code: currentRes.value?.status,
-      data: currentRes.value?.data,
-      error: currentRes.reason?.response?.data || currentRes.reason?.message,
-    });
-
-    console.log('TOP:', {
-      status: topRes.status,
-      code: topRes.value?.status,
-      data: topRes.value?.data,
-      error: topRes.reason?.response?.data || topRes.reason?.message,
-    });
-
-    console.log('RECENT:', {
-      status: recentRes.status,
-      code: recentRes.value?.status,
-      data: recentRes.value?.data,
-      error: recentRes.reason?.response?.data || recentRes.reason?.message,
-    });
   } catch (err) {
     console.error('Spotify /me error:', err.response?.data || err.message)
     res.status(500).json({ error: 'Failed to fetch Spotify data.' })
