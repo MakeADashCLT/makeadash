@@ -1614,9 +1614,19 @@ export default function DashboardPage({ onLogout }) {
         throw new Error(assignmentsJson.error || 'Failed to fetch assignments.');
       }
 
-      const uniqueCourses = [...new Set(assignmentsJson.assignments.map((a) => a.courseName))];
+      const assignments = assignmentsJson.assignments || [];
+      const uniqueCourses = [...new Set(assignments.map((a) => a.courseName))];
       const courseColors = Object.fromEntries(
         uniqueCourses.map((course, index) => [course, pickCourseColor(index)])
+      );
+
+      // store only for this browser session, not in Supabase
+      sessionStorage.setItem(
+        'canvasIntegration',
+        JSON.stringify({
+          canvasUrl,
+          canvasToken,
+        })
       );
 
       setWidgets((prev) =>
@@ -1627,7 +1637,7 @@ export default function DashboardPage({ onLogout }) {
                 loading: false,
                 error: '',
                 connected: true,
-                assignments: assignmentsJson.assignments || [],
+                assignments,
                 courseColors,
               }
             : w
