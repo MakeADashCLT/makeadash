@@ -1648,17 +1648,32 @@
   text-overflow: ellipsis;
 }
 
-.spotify-widget {
+.spotify-scroll-area {
+  overflow-y: auto;
+  max-height: 520px;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  gap: 12px;
+  gap: 16px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(29, 185, 84, 0.3) transparent;
 }
 
-.spotify-scroll-area {
-  max-height: 520px;
-  overflow-y: auto;
-  padding-right: 6px;
+.spotify-scroll-area::-webkit-scrollbar {
+  width: 5px;
+}
+
+.spotify-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.spotify-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(29, 185, 84, 0.25);
+  border-radius: 9999px;
+}
+
+.spotify-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(29, 185, 84, 0.5);
 }
 
 .spotify-player-controls {
@@ -1696,18 +1711,6 @@
   font-size: 12px;
   opacity: 0.75;
   margin-top: 2px;
-}
-
-.spotify-track-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.spotify-track-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .spotify-track-meta {
