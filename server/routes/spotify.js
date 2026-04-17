@@ -89,6 +89,13 @@ router.get('/disconnect', (req, res) => {
   res.json({ success: true })
 })
 
+router.get('/debug', (req, res) => {
+  res.json({
+    spotifyState: req.session.spotifyState || null,
+    spotifySession: req.session.spotify || null,
+  });
+});
+
 // GET /api/spotify/me  — main data endpoint
 router.get('/me', async (req, res) => {
   try {
