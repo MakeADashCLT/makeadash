@@ -1306,7 +1306,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const response = await fetch(
-        `$https://www.makeadash.tech/api/steam/featured?q=${encodeURIComponent(query)}`
+        `https://www.makeadash.tech/api/steam/featured?q=${encodeURIComponent(query)}`
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to fetch Steam games.');
