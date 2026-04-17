@@ -1542,3 +1542,80 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.spotify-widget {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 12px;
+}
+
+.spotify-scroll-area {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.spotify-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 10px;
+}
+
+.spotify-player-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+.spotify-player-btn--main {
+  font-size: 18px;
+  padding: 10px 16px;
+  background: #1db954;
+  color: #08120c;
+  font-weight: 700;
+}
+
+.spotify-seek-slider {
+  width: 100%;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+.spotify-device-name {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.spotify-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spotify-track-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spotify-track-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.spotify-track-name,
+.spotify-track-artist,
+.spotify-np-title,
+.spotify-np-artist,
+.spotify-np-album {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

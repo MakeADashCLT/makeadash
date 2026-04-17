@@ -236,6 +236,10 @@ function WidgetColumn({
   onSpotifyConnect,
   onSpotifyDisconnect,
   onSpotifyRefresh,
+  onSpotifyTogglePlay,
+  onSpotifyNext,
+  onSpotifyPrevious,
+  onSpotifySeek,
 }) {
   return (
     <div
@@ -663,7 +667,7 @@ function WidgetColumn({
                 <div className="spotify-connect-icon"><SpotifyLogo /></div>
                 <p className="spotify-connect-title">Connect Spotify</p>
                 <p className="spotify-connect-text">
-                  Sign in with Spotify to see what's playing and your top tracks.
+                  Sign in with Spotify to see what&apos;s playing and control playback.
                 </p>
                 <button
                   type="button"
@@ -675,7 +679,6 @@ function WidgetColumn({
               </div>
             ) : (
               <>
-                {/* ── Header ── */}
                 <div className="spotify-widget-top-bar">
                   <div className="spotify-profile-row">
                     {widget.data?.profile?.avatar && (
@@ -692,131 +695,182 @@ function WidgetColumn({
                       <p className="spotify-product">
                         {widget.data?.profile?.product || 'free'}
                       </p>
+                      {widget.data?.current?.device?.name && (
+                        <p className="spotify-device-name">
+                          {widget.data.current.device.name}
+                        </p>
+                      )}
                     </div>
                   </div>
+
                   <div className="spotify-top-actions">
                     <button
                       type="button"
                       className="spotify-refresh-btn"
                       onClick={() => onSpotifyRefresh(widget.id)}
                       aria-label="Refresh Spotify"
-                    >↻</button>
+                    >
+                      ↻
+                    </button>
                     <button
                       type="button"
                       className="spotify-disconnect-btn"
                       onClick={() => onSpotifyDisconnect(widget.id)}
-                    >Disconnect</button>
+                    >
+                      Disconnect
+                    </button>
                   </div>
                 </div>
 
                 {widget.loading && <div className="spotify-status">Loading...</div>}
-                {widget.error   && <div className="spotify-status spotify-status--error">{widget.error}</div>}
+                {widget.error && <div className="spotify-status spotify-status--error">{widget.error}</div>}
 
-                {/* ── Now Playing ── */}
-                {widget.data?.current ? (
-                  <div className="spotify-now-playing">
-                    <p className="spotify-section-label">
-                      {widget.data.current.isPlaying ? '▶ NOW PLAYING' : '⏸ PAUSED'}
-                    </p>
-                    <div className="spotify-np-card">
-                      {widget.data.current.track.image && (
-                        <img
-                          src={widget.data.current.track.image}
-                          alt="Album art"
-                          className="spotify-np-art"
-                        />
-                      )}
-                      <div className="spotify-np-meta">
-                        <a
-                          href={widget.data.current.track.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="spotify-np-title"
-                        >
-                          {widget.data.current.track.name}
-                        </a>
-                        <p className="spotify-np-artist">{widget.data.current.track.artists}</p>
-                        <p className="spotify-np-album">{widget.data.current.track.album}</p>
-                        {widget.data.current.durationMs > 0 && (
-                          <>
-                            <div className="spotify-progress-bar">
-                              <div
-                                className="spotify-progress-fill"
-                                style={{
-                                  width: `${(widget.data.current.progressMs / widget.data.current.durationMs) * 100}%`
-                                }}
-                              />
-                            </div>
-                            <div className="spotify-progress-times">
-                              <span>{msToTime(widget.data.current.progressMs)}</span>
-                              <span>{msToTime(widget.data.current.durationMs)}</span>
-                            </div>
-                          </>
+                <div className="spotify-scroll-area">
+                  {widget.data?.current ? (
+                    <div className="spotify-now-playing">
+                      <p className="spotify-section-label">
+                        {widget.data.current.isPlaying ? '▶ NOW PLAYING' : '⏸ PAUSED'}
+                      </p>
+
+                      <div className="spotify-np-card">
+                        {widget.data.current.track.image && (
+                          <img
+                            src={widget.data.current.track.image}
+                            alt="Album art"
+                            className="spotify-np-art"
+                          />
                         )}
+
+                        <div className="spotify-np-meta">
+                          <a
+                            href={widget.data.current.track.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="spotify-np-title"
+                          >
+                            {widget.data.current.track.name}
+                          </a>
+
+                          <p className="spotify-np-artist">{widget.data.current.track.artists}</p>
+                          <p className="spotify-np-album">{widget.data.current.track.album}</p>
+
+                          <div className="spotify-player-controls">
+                            <button
+                              type="button"
+                              className="spotify-player-btn"
+                              onClick={() => onSpotifyPrevious(widget.id)}
+                              aria-label="Previous track"
+                            >
+                              ⏮
+                            </button>
+
+                            <button
+                              type="button"
+                              className="spotify-player-btn spotify-player-btn--main"
+                              onClick={() => onSpotifyTogglePlay(widget.id)}
+                              aria-label={widget.data.current.isPlaying ? 'Pause' : 'Play'}
+                            >
+                              {widget.data.current.isPlaying ? '⏸' : '▶'}
+                            </button>
+
+                            <button
+                              type="button"
+                              className="spotify-player-btn"
+                              onClick={() => onSpotifyNext(widget.id)}
+                              aria-label="Next track"
+                            >
+                              ⏭
+                            </button>
+                          </div>
+
+                          {widget.data.current.durationMs > 0 && (
+                            <>
+                              <input
+                                type="range"
+                                className="spotify-seek-slider"
+                                min="0"
+                                max={widget.data.current.durationMs}
+                                value={Math.min(
+                                  widget.localProgressMs ?? widget.data.current.progressMs ?? 0,
+                                  widget.data.current.durationMs
+                                )}
+                                onChange={(e) =>
+                                  onSpotifySeek(widget.id, Number(e.target.value))
+                                }
+                              />
+
+                              <div className="spotify-progress-times">
+                                <span>
+                                  {msToTime(widget.localProgressMs ?? widget.data.current.progressMs ?? 0)}
+                                </span>
+                                <span>{msToTime(widget.data.current.durationMs)}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  !widget.loading && (
-                    <p className="spotify-idle">Nothing playing right now.</p>
-                  )
-                )}
+                  ) : (
+                    !widget.loading && <p className="spotify-idle">Nothing playing right now.</p>
+                  )}
 
-                {/* ── Top Tracks ── */}
-                {widget.data?.topTracks?.length > 0 && (
-                  <div className="spotify-section">
-                    <p className="spotify-section-label">TOP TRACKS</p>
-                    <div className="spotify-track-list">
-                      {widget.data.topTracks.map((track, i) => (
-                        <a
-                          key={track.id}
-                          href={track.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="spotify-track-row"
-                        >
-                          <span className="spotify-track-num">{i + 1}</span>
-                          {track.image && (
-                            <img src={track.image} alt={track.name} className="spotify-track-art" />
-                          )}
-                          <div className="spotify-track-meta">
-                            <p className="spotify-track-name">{track.name}</p>
-                            <p className="spotify-track-artist">{track.artists}</p>
-                          </div>
-                        </a>
-                      ))}
+                  {widget.data?.topTracks?.length > 0 && (
+                    <div className="spotify-section">
+                      <p className="spotify-section-label">TOP TRACKS</p>
+                      <div className="spotify-track-list">
+                        {widget.data.topTracks.map((track, i) => (
+                          <a
+                            key={track.id}
+                            href={track.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="spotify-track-row"
+                          >
+                            <span className="spotify-track-num">{i + 1}</span>
+                            {track.image && (
+                              <img src={track.image} alt={track.name} className="spotify-track-art" />
+                            )}
+                            <div className="spotify-track-meta">
+                              <p className="spotify-track-name">{track.name}</p>
+                              <p className="spotify-track-artist">{track.artists}</p>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* ── Recently Played ── */}
-                {widget.data?.recentTracks?.length > 0 && (
-                  <div className="spotify-section">
-                    <p className="spotify-section-label">RECENTLY PLAYED</p>
-                    <div className="spotify-track-list">
-                      {widget.data.recentTracks.map((track) => (
-                        <a
-                          key={track.id}
-                          href={track.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="spotify-track-row"
-                        >
-                          {track.image && (
-                            <img src={track.image} alt={track.name} className="spotify-track-art" />
-                          )}
-                          <div className="spotify-track-meta">
-                            <p className="spotify-track-name">{track.name}</p>
-                            <p className="spotify-track-artist">{track.artists}</p>
-                          </div>
-                          <span className="spotify-track-time">
-                            {new Date(track.playedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                          </span>
-                        </a>
-                      ))}
+                  {widget.data?.recentTracks?.length > 0 && (
+                    <div className="spotify-section">
+                      <p className="spotify-section-label">RECENTLY PLAYED</p>
+                      <div className="spotify-track-list">
+                        {widget.data.recentTracks.map((track) => (
+                          <a
+                            key={track.id}
+                            href={track.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="spotify-track-row"
+                          >
+                            {track.image && (
+                              <img src={track.image} alt={track.name} className="spotify-track-art" />
+                            )}
+                            <div className="spotify-track-meta">
+                              <p className="spotify-track-name">{track.name}</p>
+                              <p className="spotify-track-artist">{track.artists}</p>
+                            </div>
+                            <span className="spotify-track-time">
+                              {new Date(track.playedAt).toLocaleTimeString([], {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -959,6 +1013,10 @@ function DeckArea({
   onSpotifyConnect,
   onSpotifyDisconnect,
   onSpotifyRefresh,
+  onSpotifyTogglePlay,
+  onSpotifyNext,
+  onSpotifyPrevious,
+  onSpotifySeek,
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -1025,6 +1083,10 @@ function DeckArea({
                       onSpotifyConnect={onSpotifyConnect}
                       onSpotifyDisconnect={onSpotifyDisconnect}
                       onSpotifyRefresh={onSpotifyRefresh}
+                      onSpotifyTogglePlay={onSpotifyTogglePlay}
+                      onSpotifyNext={onSpotifyNext}
+                      onSpotifyPrevious={onSpotifyPrevious}
+                      onSpotifySeek={onSpotifySeek}
                     />
                   </SortableWidgetItem>
                 ))}
@@ -1587,40 +1649,161 @@ export default function DashboardPage({ onLogout }) {
     }
   }
 
-  // -- Spotify ----
-  async function fetchSpotifyForWidget(widgetId) {
-  setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, loading: true, error: '' } : w));
+async function fetchSpotifyForWidget(widgetId) {
+  setWidgets(prev =>
+    prev.map(w =>
+      w.id === widgetId ? { ...w, loading: true, error: '' } : w
+    )
+  )
+
   try {
-    const res = await fetch('https://www.makeadash.tech/api/spotify/me', { credentials: 'include' });
-    const data = await res.json();
+    const res = await fetch('https://www.makeadash.tech/api/spotify/me', {
+      credentials: 'include',
+    })
+
+    const data = await res.json()
+
     if (res.status === 401) {
-      setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, loading: false, connected: false, data: null, error: '' } : w));
-      return;
+      setWidgets(prev =>
+        prev.map(w =>
+          w.id === widgetId
+            ? { ...w, loading: false, connected: false, data: null, error: '', localProgressMs: 0 }
+            : w
+        )
+      )
+      return
     }
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch Spotify data.');
-    setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, loading: false, error: '', connected: true, data } : w));
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to fetch Spotify data.')
+    }
+
+    setWidgets(prev =>
+      prev.map(w =>
+        w.id === widgetId
+          ? {
+              ...w,
+              loading: false,
+              error: '',
+              connected: true,
+              data,
+              localProgressMs: data.current?.progressMs ?? 0,
+            }
+          : w
+      )
+    )
   } catch (err) {
-    setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, loading: false, error: err.message || 'Unable to load Spotify.' } : w));
+    setWidgets(prev =>
+      prev.map(w =>
+        w.id === widgetId
+          ? { ...w, loading: false, error: err.message || 'Unable to load Spotify.' }
+          : w
+      )
+    )
   }
 }
 
-
 function handleSpotifyConnect(widgetId) {
-  sessionStorage.setItem('spotifyWidgetId', widgetId);
-  window.location.href = 'https://www.makeadash.tech/api/spotify/login';
+  sessionStorage.setItem('spotifyWidgetId', widgetId)
+  window.location.href = 'https://www.makeadash.tech/api/spotify/login'
 }
-
 
 async function handleSpotifyDisconnect(widgetId) {
   try {
-    await fetch('https://www.makeadash.tech/api/spotify/disconnect', { credentials: 'include' });
+    await fetch('https://www.makeadash.tech/api/spotify/disconnect', {
+      credentials: 'include',
+    })
   } catch (_) {}
-  setWidgets(prev => prev.map(w => w.id === widgetId ? { ...w, connected: false, data: null, error: '' } : w));
+
+  setWidgets(prev =>
+    prev.map(w =>
+      w.id === widgetId
+        ? { ...w, connected: false, data: null, error: '', localProgressMs: 0 }
+        : w
+    )
+  )
 }
 
+function handleSpotifyRefresh(widgetId) {
+  fetchSpotifyForWidget(widgetId)
+}
 
-function handleSpotifyRefresh(widgetId) { fetchSpotifyForWidget(widgetId); }
+async function runSpotifyCommand(widgetId, endpoint, method = 'POST') {
+  try {
+    const res = await fetch(`https://www.makeadash.tech/api/spotify/${endpoint}`, {
+      method,
+      credentials: 'include',
+    })
 
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+      throw new Error(data.error || `Failed to run Spotify action: ${endpoint}`)
+    }
+
+    setTimeout(() => {
+      fetchSpotifyForWidget(widgetId)
+    }, 450)
+  } catch (err) {
+    setWidgets(prev =>
+      prev.map(w =>
+        w.id === widgetId
+          ? { ...w, error: err.message || 'Spotify action failed.' }
+          : w
+      )
+    )
+  }
+}
+
+function handleSpotifyTogglePlay(widgetId) {
+  const widget = widgets.find(w => w.id === widgetId)
+  const isPlaying = !!widget?.data?.current?.isPlaying
+  runSpotifyCommand(widgetId, isPlaying ? 'pause' : 'play', 'PUT')
+}
+
+function handleSpotifyNext(widgetId) {
+  runSpotifyCommand(widgetId, 'next', 'POST')
+}
+
+function handleSpotifyPrevious(widgetId) {
+  runSpotifyCommand(widgetId, 'previous', 'POST')
+}
+
+async function handleSpotifySeek(widgetId, positionMs) {
+  try {
+    setWidgets(prev =>
+      prev.map(w =>
+        w.id === widgetId ? { ...w, localProgressMs: positionMs } : w
+      )
+    )
+
+    const res = await fetch(
+      `https://www.makeadash.tech/api/spotify/seek?position_ms=${positionMs}`,
+      {
+        method: 'PUT',
+        credentials: 'include',
+      }
+    )
+
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to seek playback.')
+    }
+
+    setTimeout(() => {
+      fetchSpotifyForWidget(widgetId)
+    }, 300)
+  } catch (err) {
+    setWidgets(prev =>
+      prev.map(w =>
+        w.id === widgetId
+          ? { ...w, error: err.message || 'Seek failed.' }
+          : w
+      )
+    )
+  }
+}
 
 // ── Check status on mount for any existing Spotify widgets ──
 useEffect(() => {
@@ -1652,6 +1835,44 @@ useEffect(() => {
   };
   if (widgets.length > 0) tryFetch();
 }, [widgets.length]);
+
+// Poll Spotify every 8 seconds for connected widgets
+useEffect(() => {
+  const spotifyWidgets = widgets.filter(w => w.type === 'spotify' && w.connected)
+
+  if (spotifyWidgets.length === 0) return
+
+  const interval = setInterval(() => {
+    spotifyWidgets.forEach(w => {
+      fetchSpotifyForWidget(w.id)
+    })
+  }, 8000)
+
+  return () => clearInterval(interval)
+}, [widgets.filter(w => w.type === 'spotify' && w.connected).map(w => w.id).join('|')])
+
+// Smooth local progress ticking every second
+useEffect(() => {
+  const interval = setInterval(() => {
+    setWidgets(prev =>
+      prev.map(w => {
+        if (w.type !== 'spotify' || !w.connected || !w.data?.current?.isPlaying) {
+          return w
+        }
+
+        const duration = w.data.current.durationMs ?? 0
+        const nextProgress = Math.min((w.localProgressMs ?? w.data.current.progressMs ?? 0) + 1000, duration)
+
+        return {
+          ...w,
+          localProgressMs: nextProgress,
+        }
+      })
+    )
+  }, 1000)
+
+  return () => clearInterval(interval)
+}, [])
 
   // ── Widget picker ────────────────────────────────────────────────────────────
   function openWidgetPicker()  { setIsWidgetModalOpen(true);  }
@@ -1775,6 +1996,10 @@ useEffect(() => {
           onSpotifyConnect={handleSpotifyConnect}
           onSpotifyDisconnect={handleSpotifyDisconnect}
           onSpotifyRefresh={handleSpotifyRefresh}
+          onSpotifyTogglePlay={handleSpotifyTogglePlay}
+          onSpotifyNext={handleSpotifyNext}
+          onSpotifyPrevious={handleSpotifyPrevious}
+          onSpotifySeek={handleSpotifySeek}
         />
 
         <section className="dashboard-connections-grid">
