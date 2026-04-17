@@ -602,7 +602,7 @@ function WidgetColumn({
                 className="canvas-widget-input"
                 value={widget.canvasUrl}
                 onChange={(e) => onCanvasUrlChange(widget.id, e.target.value)}
-                placeholder="https://your-school.instructure.com"
+                placeholder="https://instructure.charlotte.edu/"
               />
               <input
                 type="password"
