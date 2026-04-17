@@ -9,7 +9,7 @@ import WorkboardsPage from './pages/WorkboardsPage'
 import './App.css'
 
 /**
- * Canvas Deck – The Digital Atelier
+ * MakeADash – The Digital Dashboard.
  *
  * Route map:
  *   /           → redirect to /login (unauthenticated) or /dashboard

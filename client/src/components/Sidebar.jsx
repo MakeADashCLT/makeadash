@@ -26,15 +26,6 @@ function IconWorkboards() {
   )
 }
 
-function IconMessages() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-    </svg>
-  )
-}
-
 function IconSettings() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -88,7 +79,7 @@ function IconPlus() {
 
 function LogoMark() {
   return (
-    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-label="Canvas Deck logo mark">
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-label="MakeADash logo mark">
       <rect width="32" height="32" rx="8" fill="#4f98a3"/>
       <path d="M9 10h6l3 12H9V10z" fill="white" opacity="0.9"/>
       <path d="M15 10h8v12h-5l-3-12z" fill="white" opacity="0.6"/>
@@ -101,7 +92,6 @@ function LogoMark() {
 const PRIMARY_NAV = [
   { to: '/dashboard',  label: 'Dashboard',  Icon: IconDashboard  },
   { to: '/workboards', label: 'Workboards', Icon: IconWorkboards },
-  { to: '/messages',   label: 'Messages',   Icon: IconMessages   },
   { to: '/settings',   label: 'Settings',   Icon: IconSettings   },
 ]
 
@@ -121,8 +111,8 @@ export default function Sidebar({ onAddWidget, onLogout }) {
       <div className="sidebar-logo">
         <LogoMark />
         <div className="sidebar-logo-text">
-          <span className="sidebar-logo-name">Canvas Deck</span>
-          <span className="sidebar-logo-sub">THE DIGITAL ATELIER</span>
+          <span className="sidebar-logo-name">MakeADash</span>
+          <span className="sidebar-logo-sub">THE DIGITAL DASHBOARD</span>
         </div>
       </div>
 

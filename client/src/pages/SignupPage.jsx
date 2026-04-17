@@ -68,11 +68,11 @@ export default function SignupPage({ onSignup }) {
 
           <div className="lp-brand">
             <LogoMark />
-            <span className="lp-brand-name">Canvas Deck</span>
+            <span className="lp-brand-name">MakeADash</span>
           </div>
 
           <h1 className="lp-headline">
-            Join the <span className="lp-headline-accent">Atelier.</span>
+            Join the <span className="lp-headline-accent">Dashboard.</span>
           </h1>
 
           <p className="lp-tagline">
