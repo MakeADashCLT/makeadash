@@ -736,18 +736,6 @@ function WidgetColumn({
                 {widget.error && <div className="spotify-status spotify-status--error">{widget.error}</div>}
 
                 <div className="spotify-scroll-area">
-                  {widget.data && (
-    <pre style={{ fontSize: 10, color: '#4f98a3', background: '#111', padding: 8, borderRadius: 8, overflowX: 'auto' }}>
-      {JSON.stringify({
-        hasData: !!widget.data,
-        hasCurrent: !!widget.data.current,
-        topTracksCount: widget.data.topTracks?.length ?? 'undefined',
-        recentTracksCount: widget.data.recentTracks?.length ?? 'undefined',
-        product: widget.data.profile?.product,
-      }, null, 2)}
-    </pre>
-  )}
-
                   {widget.data?.current ? (
                     <div className="spotify-now-playing">
                       <p className="spotify-section-label">
