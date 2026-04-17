@@ -159,6 +159,34 @@ router.get('/me', async (req, res) => {
       } : null,
       current, topTracks, recentTracks,
     })
+
+    console.log('PROFILE:', {
+      status: profileRes.status,
+      code: profileRes.value?.status,
+      data: profileRes.value?.data,
+      error: profileRes.reason?.response?.data || profileRes.reason?.message,
+    });
+
+    console.log('CURRENT:', {
+      status: currentRes.status,
+      code: currentRes.value?.status,
+      data: currentRes.value?.data,
+      error: currentRes.reason?.response?.data || currentRes.reason?.message,
+    });
+
+    console.log('TOP:', {
+      status: topRes.status,
+      code: topRes.value?.status,
+      data: topRes.value?.data,
+      error: topRes.reason?.response?.data || topRes.reason?.message,
+    });
+
+    console.log('RECENT:', {
+      status: recentRes.status,
+      code: recentRes.value?.status,
+      data: recentRes.value?.data,
+      error: recentRes.reason?.response?.data || recentRes.reason?.message,
+    });
   } catch (err) {
     console.error('Spotify /me error:', err.response?.data || err.message)
     res.status(500).json({ error: 'Failed to fetch Spotify data.' })
