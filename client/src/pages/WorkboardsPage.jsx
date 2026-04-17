@@ -73,6 +73,7 @@ function CreateTaskModal({ onClose, onAdd }) {
   const [due, setDue]           = useState('')
   const [error, setError]       = useState('')
 
+
   function handleSubmit(e) {
     e.preventDefault()
     if (!title.trim()) { setError('Task title is required.'); return }
@@ -300,6 +301,8 @@ export default function WorkboardsPage({ onLogout, user }) {
   const [tasks, setTasks]           = useState([])
   const [showModal, setShowModal]   = useState(false)
   const [search, setSearch]         = useState('')
+  const [importingCanvas, setImportingCanvas] = useState(false)
+  const [canvasImportMessage, setCanvasImportMessage] = useState('')
   const dragCardId                  = useRef(null)
 
   useEffect(() => {
@@ -431,6 +434,132 @@ export default function WorkboardsPage({ onLogout, user }) {
     dragCardId.current = null
   }
 
+  async function handleImportCanvasAssignments() {
+    setCanvasImportMessage('')
+    setImportingCanvas(true)
+
+    try {
+      const stored = sessionStorage.getItem('canvasIntegration')
+
+      if (!stored) {
+        setCanvasImportMessage('Please connect your Canvas token first on the Dashboard.')
+        return
+      }
+
+      const { canvasUrl, canvasToken } = JSON.parse(stored)
+
+      if (!canvasUrl || !canvasToken) {
+        setCanvasImportMessage('Please connect your Canvas token first on the Dashboard.')
+        return
+      }
+
+      const { data: userData } = await supabase.auth.getUser()
+      const user = userData?.user
+
+      if (!user) {
+        setCanvasImportMessage('You must be logged in to import assignments.')
+        return
+      }
+
+      const response = await fetch('https://www.makeadash.tech/api/canvas/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          canvasUrl: canvasUrl.replace(/\/+$/, ''),
+          canvasToken,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch Canvas assignments.')
+      }
+
+      const assignments = result.assignments || []
+
+      if (assignments.length === 0) {
+        setCanvasImportMessage('No upcoming Canvas assignments found.')
+        return
+      }
+
+      const { data: existingTasks, error: existingError } = await supabase
+        .from('workboard_tasks')
+        .select('title, due_date')
+        .eq('user_id', user.id)
+
+      if (existingError) {
+        console.error(existingError)
+        setCanvasImportMessage('Could not compare existing tasks.')
+        return
+      }
+
+      const existingKeys = new Set(
+        (existingTasks || []).map(
+          (t) => `${(t.title || '').trim().toLowerCase()}__${t.due_date || ''}`
+        )
+      )
+
+      const rowsToInsert = assignments
+        .map((assignment) => {
+          const dueDate = assignment.dueAt
+            ? new Date(assignment.dueAt).toISOString().slice(0, 10)
+            : null
+
+          return {
+            user_id: user.id,
+            title: assignment.name?.trim() || 'Untitled Assignment',
+            description: assignment.courseName
+              ? `Imported from Canvas • ${assignment.courseName}`
+              : 'Imported from Canvas',
+            category: 'CANVAS',
+            priority: 'medium',
+            due_date: dueDate,
+            status: 'todo',
+          }
+        })
+        .filter((row) => {
+          const key = `${row.title.toLowerCase()}__${row.due_date || ''}`
+          return !existingKeys.has(key)
+        })
+
+      if (rowsToInsert.length === 0) {
+        setCanvasImportMessage('All Canvas assignments are already imported.')
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('workboard_tasks')
+        .insert(rowsToInsert)
+        .select()
+
+      if (error) {
+        console.error(error)
+        setCanvasImportMessage('Failed to import Canvas assignments.')
+        return
+      }
+
+      const formatted = data.map((t) => ({
+        id: t.id,
+        title: t.title,
+        description: t.description,
+        category: t.category,
+        priority: t.priority,
+        due: t.due_date,
+        column: t.status,
+        createdAt: t.created_at,
+      }))
+
+      setTasks((prev) => [...formatted, ...prev])
+      setCanvasImportMessage(`Imported ${formatted.length} assignment${formatted.length === 1 ? '' : 's'}.`)
+    } catch (error) {
+      console.error('Failed to import Canvas tasks:', error)
+      setCanvasImportMessage(error.message || 'Unable to import Canvas assignments.')
+    } finally {
+      setImportingCanvas(false)
+    }
+  }
+
   // ── Velocity bar widths ───────────────────────────────────────────────────
   const total    = tasks.length || 1
   const todoPct  = Math.round((tasks.filter(t => t.column === 'todo').length       / total) * 100)
@@ -494,6 +623,21 @@ export default function WorkboardsPage({ onLogout, user }) {
               >
                 <Icon.Plus /> Create Task
               </button>
+
+              <button
+                type="button"
+                className="wb-btn-import-canvas"
+                onClick={handleImportCanvasAssignments}
+                disabled={importingCanvas}
+              >
+                {importingCanvas ? 'Importing…' : 'Import Canvas'}
+              </button>
+
+              {canvasImportMessage && (
+                <p className="wb-import-message">
+                  {canvasImportMessage}
+                </p>
+              )}
             </div>
           </div>
 
