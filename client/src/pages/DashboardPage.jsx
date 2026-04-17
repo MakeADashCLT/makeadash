@@ -523,9 +523,10 @@ function WidgetColumn({
         {widget.type === 'calendar' && (
           <div className="calendar-widget">
             {!widget.connected ? (
-              <div className="calendar-widget-empty">
-                <p className="calendar-widget-title-text">Connect Google Calendar</p>
-                <p className="calendar-widget-text">
+              <div className="calendar-empty">
+                <div className="calendar-empty-icon">📅</div>
+                <p className="calendar-empty-title">Connect Google Calendar</p>
+                <p className="calendar-empty-text">
                   Grant read access only when you want to use this widget.
                 </p>
                 <button
@@ -566,20 +567,29 @@ function WidgetColumn({
                     {widget.events?.length > 0 ? (
                       widget.events.map((event) => (
                         <div key={event.id} className="calendar-event-card">
-                          <div className="calendar-event-main">
-                            <p className="calendar-event-title">{event.summary || 'Untitled event'}</p>
-                            <p className="calendar-event-time">
-                              {formatCalendarEventTime(event.start, event.end)}
+                          <div className="calendar-event-stripe" />
+                          <div className="calendar-event-content">
+                            <p className="calendar-event-title">
+                              {event.summary || 'Untitled event'}
                             </p>
-                            {event.location ? (
-                              <p className="calendar-event-location">{event.location}</p>
-                            ) : null}
+                            {event.start?.date ? (
+                              <span className="calendar-event-allday">All day</span>
+                            ) : (
+                              <p className="calendar-event-time">
+                                {formatCalendarEventTime(event.start, event.end)}
+                              </p>
+                            )}
+                            {event.location && (
+                              <p className="calendar-event-location">📍 {event.location}</p>
+                            )}
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="calendar-widget-status">
-                        No events found for this view.
+                      <div className="calendar-empty">
+                        <div className="calendar-empty-icon">📅</div>
+                        <p className="calendar-empty-title">All clear</p>
+                        <p className="calendar-empty-text">No events found for this view.</p>
                       </div>
                     )}
                   </div>
@@ -914,25 +924,27 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
   );
 
   return (
-    <div className="widget-modal-overlay" onClick={onClose}>
-      <div className="widget-modal" onClick={(e) => e.stopPropagation()}
-        role="dialog" aria-modal="true" aria-labelledby="add-widget-title">
-        <div className="widget-modal-header">
-          <div>
-            <p className="widget-modal-eyebrow">ADD WIDGET</p>
-            <h2 id="add-widget-title" className="widget-modal-title">Choose a service</h2>
-            <p className="widget-modal-subtitle">Start with one available service for now.</p>
-          </div>
-          <button type="button" className="widget-modal-close" onClick={onClose}
-            aria-label="Close add widget modal">×</button>
-        </div>
+  <div className="widget-modal-overlay" onClick={onClose}>
+    <div className="widget-modal" onClick={(e) => e.stopPropagation()}
+      role="dialog" aria-modal="true" aria-labelledby="add-widget-title">
 
-        <div className="widget-modal-search-wrap">
-          <input type="text" className="widget-modal-search"
-            placeholder="Search services..." value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)} />
+      <div className="widget-modal-header">
+        <div>
+          <p className="widget-modal-eyebrow">ADD WIDGET</p>
+          <h2 id="add-widget-title" className="widget-modal-title">Choose a service</h2>
+          <p className="widget-modal-subtitle">Start with one available service for now.</p>
         </div>
+        <button type="button" className="widget-modal-close" onClick={onClose}
+          aria-label="Close add widget modal">×</button>
+      </div>
 
+      <div className="widget-modal-search-wrap">
+        <input type="text" className="widget-modal-search"
+          placeholder="Search services..." value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)} />
+      </div>
+
+      <div className="widget-service-list-scroll">
         <div className="widget-service-list">
           {filteredServices.length === 0 ? (
             <div className="widget-service-empty">No services match that search yet.</div>
@@ -941,15 +953,14 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
               <button key={service.id} type="button" className="widget-service-item"
                 onClick={() => onSelectWidgetType(service.id)}>
                 <div className="widget-service-icon">
-                  {service.id === 'reddit'  && <RedditLogo />}
-                  {service.id === 'weather' && <WeatherLogo />}
-                  {service.id === 'steam'   && <SteamLogo />}
-                  {service.id === 'anilist' && <AniListLogo />}
-                  {service.id === 'github'  && <GitHubLogo />}
+                  {service.id === 'reddit'   && <RedditLogo />}
+                  {service.id === 'weather'  && <WeatherLogo />}
+                  {service.id === 'steam'    && <SteamLogo />}
+                  {service.id === 'anilist'  && <AniListLogo />}
+                  {service.id === 'github'   && <GitHubLogo />}
                   {service.id === 'calendar' && <CalendarLogo />}
-                  {service.id === 'canvas' && <CanvasLmsLogo />}
-                  {service.id === 'spotify' && <SpotifyLogo />}
-
+                  {service.id === 'canvas'   && <CanvasLmsLogo />}
+                  {service.id === 'spotify'  && <SpotifyLogo />}
                 </div>
                 <div className="widget-service-content">
                   <span className="widget-service-name">{service.name}</span>
@@ -960,9 +971,10 @@ function AddWidgetModal({ isOpen, onClose, onSelectWidgetType }) {
           )}
         </div>
       </div>
+
     </div>
-  );
-}
+  </div>
+);}
 
 function SortableWidgetItem({ widget, children }) {
   const {
@@ -1958,7 +1970,7 @@ useEffect(() => {
         <header className="dashboard-topbar">
           <div>
             <p className="dashboard-kicker">MAIN DECK</p>
-            <h1 className="dashboard-title">Welcome to Canvas Deck</h1>
+            <h1 className="dashboard-title">Welcome to MakeADash</h1>
             <p className="dashboard-subtitle">
               New users start empty. Build the workspace you want.
             </p>
@@ -2002,20 +2014,21 @@ useEffect(() => {
           onSpotifySeek={handleSpotifySeek}
         />
 
-        <section className="dashboard-connections-grid">
-          <ConnectionCard
-            label="GMAIL" title="Connect Gmail"
-            description="Link your Gmail account to show inbox widgets inside your deck."
-            buttonText="Connect Gmail" />
-          <ConnectionCard
-            label="SPOTIFY" title="Connect Spotify"
-            description="Sign in with Spotify to add player, feed, or playlist widgets later."
-            buttonText="Connect Spotify" />
-          <ConnectionCard
-            label="MORE SERVICES" title="More widgets coming"
-            description="Instagram, Twitter/X, notifications, DMs, and more can plug into this same deck model."
-            buttonText="Coming Soon" />
-        </section>
+              <div className="dashboard-coming-soon">
+        <div className="dashboard-coming-soon-left">
+          <p className="dashboard-coming-soon-eyebrow">ROADMAP</p>
+          <h3 className="dashboard-coming-soon-title">More widgets on the way</h3>
+          <p className="dashboard-coming-soon-text">
+            Gmail, Instagram, Twitter/X, Notion, Discord notifications, and more
+            are being built into this same deck model.
+          </p>
+        </div>
+        <div className="dashboard-coming-soon-chips">
+          {['Gmail', 'Instagram', 'Twitter / X', 'Notion', 'Discord', 'YouTube', 'Twitch', 'LinkedIn'].map(name => (
+            <span key={name} className="dashboard-coming-soon-chip">{name}</span>
+          ))}
+        </div>
+      </div>
       </main>
 
       <AddWidgetModal
