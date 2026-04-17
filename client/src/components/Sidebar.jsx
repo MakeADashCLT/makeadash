@@ -102,9 +102,10 @@ const EXTERNAL_LINKS = [
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
+export default function Sidebar({ onAddWidget, onLogout, user }) {
+  const initials = user?.email?.slice(0, 2).toUpperCase() ?? '??'
 
-export default function Sidebar({ onAddWidget, onLogout }) {
-  return ( 
+  return (
     <aside className="sidebar" aria-label="Main navigation">
 
       {/* Logo */}
@@ -161,6 +162,32 @@ export default function Sidebar({ onAddWidget, onLogout }) {
           </a>
         ))}
       </section>
+
+      {/* User footer */}
+      {user && (
+        <div className="sidebar-user">
+          <div className="sidebar-user-avatar" aria-hidden="true">{initials}</div>
+          <div className="sidebar-user-info">
+            <span className="sidebar-user-email">{user.email}</span>
+            <span className="sidebar-user-since">
+              Since {new Date(user.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="sidebar-user-logout"
+            onClick={onLogout}
+            aria-label="Sign out"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      )}
 
     </aside>
   )
