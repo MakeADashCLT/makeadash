@@ -1880,7 +1880,7 @@ useEffect(() => {
     spotifyWidgets.forEach(w => {
       fetchSpotifyForWidget(w.id)
     })
-  }, 8000)
+  }, 30000)
 
   return () => clearInterval(interval)
 }, [widgets.filter(w => w.type === 'spotify' && w.connected).map(w => w.id).join('|')])

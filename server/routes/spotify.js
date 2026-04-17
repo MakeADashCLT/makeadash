@@ -151,47 +151,6 @@ router.get('/disconnect', (req, res) => {
   res.json({ success: true })
 })
 
-// GET /api/spotify/debug
-router.get('/debug', (req, res) => {
-  res.json({
-    spotifyState: req.session.spotifyState || null,
-    spotifySession: req.session.spotify || null,
-  })
-})
-
-// GET /api/spotify/debug-token
-router.get('/debug-token', async (req, res) => {
-  try {
-    const token = await getValidToken(req)
-    if (!token) return res.status(401).json({ error: 'Not connected' })
-
-    // Decode the JWT payload (Spotify tokens are opaque, so check via API introspection)
-    const axios = require('axios')
-    const [meRes, topRes, recentRes] = await Promise.allSettled([
-      axios.get('https://api.spotify.com/v1/me', {
-        headers: { Authorization: `Bearer ${token}` },
-        validateStatus: () => true,
-      }),
-      axios.get('https://api.spotify.com/v1/me/top/tracks?limit=3', {
-        headers: { Authorization: `Bearer ${token}` },
-        validateStatus: () => true,
-      }),
-      axios.get('https://api.spotify.com/v1/me/player/recently-played?limit=3', {
-        headers: { Authorization: `Bearer ${token}` },
-        validateStatus: () => true,
-      }),
-    ])
-
-    res.json({
-      me: { status: meRes.value?.status, data: meRes.value?.data },
-      top: { status: topRes.value?.status, data: topRes.value?.data },
-      recent: { status: recentRes.value?.status, data: recentRes.value?.data },
-    })
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-})
-
 // GET /api/spotify/me
 router.get('/me', async (req, res) => {
   try {
