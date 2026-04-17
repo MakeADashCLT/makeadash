@@ -660,9 +660,7 @@ function WidgetColumn({
           <div className="spotify-widget">
             {!widget.connected ? (
               <div className="spotify-connect-box">
-                <div className="spotify-connect-icon">
-                  <SpotifyLogo />
-                </div>
+                <div className="spotify-connect-icon"><SpotifyLogo /></div>
                 <p className="spotify-connect-title">Connect Spotify</p>
                 <p className="spotify-connect-text">
                   Sign in with Spotify to see what's playing and your top tracks.
@@ -677,69 +675,113 @@ function WidgetColumn({
               </div>
             ) : (
               <>
+                {/* ── Header ── */}
                 <div className="spotify-widget-top-bar">
                   <div className="spotify-profile-row">
-                    {widget.data?.user?.avatar && (
-                      <img src={widget.data.user.avatar} alt="Spotify avatar" className="spotify-avatar" />
+                    {widget.data?.profile?.avatar && (
+                      <img
+                        src={widget.data.profile.avatar}
+                        alt="Spotify avatar"
+                        className="spotify-avatar"
+                      />
                     )}
                     <div>
-                      <p className="spotify-display-name">{widget.data?.user?.name || 'Spotify User'}</p>
-                      <p className="spotify-product">{widget.data?.user?.product || 'free'}</p>
+                      <p className="spotify-display-name">
+                        {widget.data?.profile?.displayName || 'Spotify User'}
+                      </p>
+                      <p className="spotify-product">
+                        {widget.data?.profile?.product || 'free'}
+                      </p>
                     </div>
                   </div>
                   <div className="spotify-top-actions">
-                    <button type="button" className="spotify-refresh-btn"
-                      onClick={() => onSpotifyRefresh(widget.id)} aria-label="Refresh Spotify">↻</button>
-                    <button type="button" className="spotify-disconnect-btn"
-                      onClick={() => onSpotifyDisconnect(widget.id)}>Disconnect</button>
+                    <button
+                      type="button"
+                      className="spotify-refresh-btn"
+                      onClick={() => onSpotifyRefresh(widget.id)}
+                      aria-label="Refresh Spotify"
+                    >↻</button>
+                    <button
+                      type="button"
+                      className="spotify-disconnect-btn"
+                      onClick={() => onSpotifyDisconnect(widget.id)}
+                    >Disconnect</button>
                   </div>
                 </div>
 
                 {widget.loading && <div className="spotify-status">Loading...</div>}
-                {widget.error  && <div className="spotify-status spotify-status--error">{widget.error}</div>}
+                {widget.error   && <div className="spotify-status spotify-status--error">{widget.error}</div>}
 
-                {widget.data?.nowPlaying && (
+                {/* ── Now Playing ── */}
+                {widget.data?.current ? (
                   <div className="spotify-now-playing">
-                    <p className="spotify-section-label">NOW PLAYING</p>
+                    <p className="spotify-section-label">
+                      {widget.data.current.isPlaying ? '▶ NOW PLAYING' : '⏸ PAUSED'}
+                    </p>
                     <div className="spotify-np-card">
-                      {widget.data.nowPlaying.albumArt && (
-                        <img src={widget.data.nowPlaying.albumArt} alt="Album art" className="spotify-np-art" />
+                      {widget.data.current.track.image && (
+                        <img
+                          src={widget.data.current.track.image}
+                          alt="Album art"
+                          className="spotify-np-art"
+                        />
                       )}
                       <div className="spotify-np-meta">
-                        <a href={widget.data.nowPlaying.url} target="_blank" rel="noopener noreferrer"
-                          className="spotify-np-title">{widget.data.nowPlaying.name}</a>
-                        <p className="spotify-np-artist">{widget.data.nowPlaying.artist}</p>
-                        <p className="spotify-np-album">{widget.data.nowPlaying.album}</p>
-                        {widget.data.nowPlaying.duration > 0 && (
+                        <a
+                          href={widget.data.current.track.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="spotify-np-title"
+                        >
+                          {widget.data.current.track.name}
+                        </a>
+                        <p className="spotify-np-artist">{widget.data.current.track.artists}</p>
+                        <p className="spotify-np-album">{widget.data.current.track.album}</p>
+                        {widget.data.current.durationMs > 0 && (
                           <>
                             <div className="spotify-progress-bar">
-                              <div className="spotify-progress-fill" style={{
-                                width: `${(widget.data.nowPlaying.progress / widget.data.nowPlaying.duration) * 100}%`
-                              }} />
+                              <div
+                                className="spotify-progress-fill"
+                                style={{
+                                  width: `${(widget.data.current.progressMs / widget.data.current.durationMs) * 100}%`
+                                }}
+                              />
                             </div>
                             <div className="spotify-progress-times">
-                              <span>{msToTime(widget.data.nowPlaying.progress)}</span>
-                              <span>{msToTime(widget.data.nowPlaying.duration)}</span>
+                              <span>{msToTime(widget.data.current.progressMs)}</span>
+                              <span>{msToTime(widget.data.current.durationMs)}</span>
                             </div>
                           </>
                         )}
                       </div>
                     </div>
                   </div>
+                ) : (
+                  !widget.loading && (
+                    <p className="spotify-idle">Nothing playing right now.</p>
+                  )
                 )}
 
+                {/* ── Top Tracks ── */}
                 {widget.data?.topTracks?.length > 0 && (
                   <div className="spotify-section">
                     <p className="spotify-section-label">TOP TRACKS</p>
                     <div className="spotify-track-list">
                       {widget.data.topTracks.map((track, i) => (
-                        <a key={track.id} href={track.url} target="_blank" rel="noopener noreferrer"
-                          className="spotify-track-row">
+                        <a
+                          key={track.id}
+                          href={track.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="spotify-track-row"
+                        >
                           <span className="spotify-track-num">{i + 1}</span>
-                          {track.albumArt && <img src={track.albumArt} alt={track.name} className="spotify-track-art" />}
+                          {track.image && (
+                            <img src={track.image} alt={track.name} className="spotify-track-art" />
+                          )}
                           <div className="spotify-track-meta">
                             <p className="spotify-track-name">{track.name}</p>
-                            <p className="spotify-track-artist">{track.artist}</p>
+                            <p className="spotify-track-artist">{track.artists}</p>
                           </div>
                         </a>
                       ))}
@@ -747,8 +789,33 @@ function WidgetColumn({
                   </div>
                 )}
 
-                {!widget.data?.nowPlaying && !widget.loading && (
-                  <p className="spotify-idle">Nothing playing right now.</p>
+                {/* ── Recently Played ── */}
+                {widget.data?.recentTracks?.length > 0 && (
+                  <div className="spotify-section">
+                    <p className="spotify-section-label">RECENTLY PLAYED</p>
+                    <div className="spotify-track-list">
+                      {widget.data.recentTracks.map((track) => (
+                        <a
+                          key={track.id}
+                          href={track.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="spotify-track-row"
+                        >
+                          {track.image && (
+                            <img src={track.image} alt={track.name} className="spotify-track-art" />
+                          )}
+                          <div className="spotify-track-meta">
+                            <p className="spotify-track-name">{track.name}</p>
+                            <p className="spotify-track-artist">{track.artists}</p>
+                          </div>
+                          <span className="spotify-track-time">
+                            {new Date(track.playedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </>
             )}
@@ -1177,7 +1244,7 @@ export default function DashboardPage({ onLogout }) {
     );
     try {
       const response = await fetch(
-        `https://www.makeadash.tech/api/steam/featured?q=${encodeURIComponent(query)}`
+        `$https://www.makeadash.tech/api/steam/featured?q=${encodeURIComponent(query)}`
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to fetch Steam games.');
