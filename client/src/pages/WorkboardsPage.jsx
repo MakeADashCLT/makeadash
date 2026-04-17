@@ -297,7 +297,7 @@ function KanbanColumn({ config, cards, onDelete, onDragStart, onDrop, onAddClick
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-export default function WorkboardsPage({ onLogout }) {
+export default function WorkboardsPage({ onLogout, user }) {
   const [tasks, setTasks]           = useState([])
   const [showModal, setShowModal]   = useState(false)
   const [search, setSearch]         = useState('')
@@ -568,7 +568,7 @@ export default function WorkboardsPage({ onLogout }) {
 
   return (
     <div className="wb-root">
-      <Sidebar activePage="workboards" onLogout={onLogout} />
+      <Sidebar onLogout={onLogout} user={user} onAddWidget={() => {}} />
 
       <div className="wb-main">
         {/* Top bar */}
@@ -609,7 +609,7 @@ export default function WorkboardsPage({ onLogout }) {
                 Active Workspace
               </div>
               <h1 className="wb-project-title">
-                Project Workboard: <span className="wb-project-name">Canvas Deck</span>
+                Project Workboard: <span className="wb-project-name">MakeADash</span>
               </h1>
               <p className="wb-project-desc">
                 Track your tasks, move them through the pipeline, and stay on top of your work.
