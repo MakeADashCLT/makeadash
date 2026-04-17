@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { supabase } from '../supabaseClient'
 import Sidebar from '../components/Sidebar'
 import './WorkboardsPage.css'
 
@@ -76,7 +77,6 @@ function CreateTaskModal({ onClose, onAdd }) {
     e.preventDefault()
     if (!title.trim()) { setError('Task title is required.'); return }
     onAdd({
-      id:       crypto.randomUUID(),
       title:    title.trim(),
       description: desc.trim() || null,
       category: category.trim().toUpperCase() || 'TASK',
@@ -302,6 +302,40 @@ export default function WorkboardsPage({ onLogout }) {
   const [search, setSearch]         = useState('')
   const dragCardId                  = useRef(null)
 
+  useEffect(() => {
+    async function fetchTasks() {
+      const { data: userData } = await supabase.auth.getUser()
+      const user = userData.user
+
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('workboard_tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error(error)
+      } else {
+        const formatted = data.map(t => ({
+          id: t.id,
+          title: t.title,
+          description: t.description,
+          category: t.category,
+          priority: t.priority,
+          due: t.due_date,
+          column: t.status,
+          createdAt: t.created_at
+        }))
+
+        setTasks(formatted)
+      }
+    }
+
+    fetchTasks()
+  }, [])
+
   // ── Derived columns ──────────────────────────────────────────────────────
   const filteredTasks = search.trim()
     ? tasks.filter(t =>
@@ -316,11 +350,55 @@ export default function WorkboardsPage({ onLogout }) {
   }))
 
   // ── Handlers ─────────────────────────────────────────────────────────────
-  function handleAddTask(newTask) {
-    setTasks(prev => [newTask, ...prev])
+  async function handleAddTask(newTask) {
+    const { data: userData } = await supabase.auth.getUser()
+    const user = userData.user
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from('workboard_tasks')
+      .insert([
+        {
+          user_id: user.id,
+          title: newTask.title,
+          description: newTask.description,
+          category: newTask.category,
+          priority: newTask.priority,
+          due_date: newTask.due,
+          status: newTask.column,
+        }
+      ])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('INSERT ERROR:', error)
+      return
+    }
+
+    setTasks(prev => [{
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      priority: data.priority,
+      due: data.due_date,
+      column: data.status,
+      createdAt: data.created_at
+    }, ...prev])
   }
 
-  function handleDeleteTask(taskId) {
+  async function handleDeleteTask(taskId) {
+    const { error } = await supabase
+      .from('workboard_tasks')
+      .delete()
+      .eq('id', taskId)
+
+    if (error) {
+      console.error('DELETE ERROR:', error)
+      return
+    }
+
     setTasks(prev => prev.filter(t => t.id !== taskId))
   }
 
@@ -329,15 +407,27 @@ export default function WorkboardsPage({ onLogout }) {
     e.dataTransfer.effectAllowed = 'move'
   }
 
-  function handleDrop(e, targetColumnId) {
+  async function handleDrop(e, targetColumnId) {
     e.preventDefault()
     const id = dragCardId.current
     if (!id) return
+
+    const { error } = await supabase
+      .from('workboard_tasks')
+      .update({ status: targetColumnId })
+      .eq('id', id)
+
+    if (error) {
+      console.error('UPDATE ERROR:', error)
+      return
+    }
+
     setTasks(prev =>
       prev.map(t =>
         t.id === id ? { ...t, column: targetColumnId } : t
       )
     )
+
     dragCardId.current = null
   }
 
